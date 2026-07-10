@@ -1,0 +1,407 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Modo Carrera — Mockup</title>
+<style>
+  :root{
+    --bg-app:#050607;
+    --bg-panel:#0d1012;
+    --bg-panel-2:#12161a;
+    --amber:#ff8a1e;
+    --amber-glow:rgba(255,138,30,0.45);
+    --green:#35d07f;
+    --green-glow:rgba(53,208,127,0.35);
+    --red:#ff3b3b;
+    --red-glow:rgba(255,59,59,0.4);
+    --muted:#6b7680;
+    --line:#1c2126;
+    --text:#eef1f3;
+    --mono: ui-monospace, "SF Mono", "Cascadia Mono", Menlo, Consolas, monospace;
+    --sans: -apple-system, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+  }
+  *{box-sizing:border-box;}
+  html,body{
+    margin:0; padding:0; background:#1a1d20; min-height:100vh;
+    display:flex; flex-direction:column; align-items:center; justify-content:flex-start;
+    font-family:var(--sans); gap:28px; padding:32px 16px 48px;
+  }
+  .caption{color:#9aa2a9; font-size:13px; letter-spacing:.02em; text-align:center; max-width:420px; line-height:1.5;}
+  .phone{
+    width:390px; max-width:92vw; height:820px; max-height:82vh;
+    background:var(--bg-app); border-radius:44px; border:2px solid #2a2e32;
+    box-shadow:0 30px 60px rgba(0,0,0,.5), inset 0 0 0 8px #000;
+    overflow:hidden; position:relative; display:flex; flex-direction:column;
+  }
+  .statusdot{
+    position:absolute; top:14px; right:22px; width:8px; height:8px; border-radius:50%;
+    background:var(--muted); z-index:5;
+  }
+  .statusdot.on{background:var(--green); box-shadow:0 0 8px var(--green-glow);}
+  .statusdot.off{background:var(--red); box-shadow:0 0 8px var(--red-glow);}
+
+  .topbar{
+    padding:22px 22px 14px; display:flex; flex-direction:column; gap:4px;
+    border-bottom:1px solid var(--line);
+  }
+  .topbar .eyebrow{
+    font-size:11px; letter-spacing:.14em; text-transform:uppercase; color:var(--muted); font-weight:600;
+  }
+  .topbar .puls{
+    font-size:11px; color:var(--muted); display:flex; align-items:center; gap:6px; margin-top:2px;
+  }
+  .puls .dot{width:6px;height:6px;border-radius:50%;background:var(--green);}
+  .puls.off .dot{background:var(--red);}
+  .puls.off{color:var(--red);}
+
+  .stage{
+    flex:1; display:flex; flex-direction:column; align-items:center; justify-content:center;
+    padding:18px 20px; gap:14px; position:relative;
+  }
+  .label-main{
+    font-size:20px; letter-spacing:.04em; text-transform:uppercase; color:var(--text); font-weight:800;
+    text-align:center;
+  }
+  .digits{
+    font-family:var(--mono); font-weight:700; letter-spacing:.02em;
+    font-size:clamp(72px,20vw,110px); color:var(--amber);
+    text-shadow:0 0 18px var(--amber-glow), 0 0 2px var(--amber-glow);
+    font-variant-numeric:tabular-nums; line-height:1;
+  }
+  .digits.neg{color:var(--red); text-shadow:0 0 18px var(--red-glow);}
+  .digits.small{font-size:clamp(56px,15vw,84px);}
+  .hora-abs{font-family:var(--mono); font-weight:700; font-size:22px; color:var(--text); letter-spacing:.02em; display:none;}
+  .hora-abs.show{display:block;}
+  .digits.critical{font-size:clamp(110px,30vw,168px); color:var(--red); text-shadow:0 0 30px var(--red-glow);}
+
+  .chain{
+    display:flex; gap:6px; flex-wrap:wrap; justify-content:center; max-width:320px; margin-bottom:2px;
+  }
+  .chain .item{
+    font-family:var(--mono); font-size:11px; font-weight:700; padding:4px 9px;
+    border-radius:999px; border:1px solid var(--line); background:rgba(255,255,255,.04); color:var(--muted);
+  }
+  .chain .item.pos{color:var(--green); border-color:rgba(53,208,127,.35);}
+  .chain .item.neg{color:var(--red); border-color:rgba(255,59,59,.35);}
+
+  .chip{
+    padding:8px 18px; border-radius:999px; font-family:var(--mono); font-weight:700;
+    font-size:16px; letter-spacing:.02em; border:1px solid transparent;
+  }
+  .chip.ok{color:var(--green); background:rgba(53,208,127,.1); border-color:rgba(53,208,127,.35);}
+  .chip.late{color:var(--red); background:rgba(255,59,59,.1); border-color:rgba(255,59,59,.35);}
+  .chip.neutral{color:var(--muted); background:rgba(255,255,255,.04); border-color:var(--line);}
+
+  .sublabel{color:var(--muted); font-size:13px; text-align:center; max-width:280px;}
+
+  .banner{
+    margin:0 20px; padding:12px 16px; border-radius:10px; text-align:center;
+    font-weight:700; font-size:14px; letter-spacing:.06em; text-transform:uppercase;
+    display:none;
+  }
+  .banner.show{display:block;}
+  .banner.debe{background:rgba(255,59,59,.14); color:var(--red); border:1px solid rgba(255,59,59,.4);
+    animation:pulse 1.1s ease-in-out infinite;}
+  .banner.no-tocar{background:rgba(255,255,255,.05); color:var(--muted); border:1px solid var(--line);}
+  @keyframes pulse{0%,100%{opacity:1;}50%{opacity:.55;}}
+
+  .bottom{
+    padding:16px 20px 26px; display:flex; flex-direction:column; gap:10px;
+    border-top:1px solid var(--line);
+  }
+  .tocar{
+    width:100%; padding:22px; border-radius:16px; border:none;
+    background:var(--amber); color:#1a1204; font-family:var(--sans);
+    font-weight:800; font-size:20px; letter-spacing:.08em; text-transform:uppercase;
+    box-shadow:0 6px 0 #b25f10, 0 10px 24px rgba(255,138,30,.25);
+    cursor:pointer; transition:transform .05s ease;
+  }
+  .tocar:active{transform:translateY(4px); box-shadow:0 2px 0 #b25f10;}
+  .tocar.disabled{background:#2a2e32; color:var(--muted); box-shadow:none; cursor:default;}
+
+  .controls{
+    display:flex; flex-wrap:wrap; gap:8px; max-width:420px; justify-content:center;
+  }
+  .controls button{
+    background:var(--bg-panel-2); border:1px solid var(--line); color:var(--text);
+    font-size:12px; padding:8px 12px; border-radius:8px; cursor:pointer; font-family:var(--sans);
+  }
+  .controls button.active{border-color:var(--amber); color:var(--amber);}
+</style>
+</head>
+<body>
+
+<div class="phone">
+  <div class="topbar">
+    <div class="eyebrow" id="topContext">Día 2 · Vespertina</div>
+    <div id="pulsList"></div>
+  </div>
+
+  <div class="stage">
+    <div class="chain" id="chain"></div>
+    <div class="label-main" id="labelMain">Faltan para tu largada</div>
+    <div class="hora-abs" id="horaAbs"></div>
+    <div class="digits" id="digits">00:04:12</div>
+    <div class="chip neutral" id="chip" style="visibility:hidden">+0.00s</div>
+    <div class="sublabel" id="sublabel"></div>
+  </div>
+
+  <div class="banner" id="banner"></div>
+
+  <div class="bottom">
+    <button class="tocar" id="tocarBtn">Tocar</button>
+  </div>
+</div>
+
+<div class="controls" id="stateButtons"></div>
+
+<div style="display:flex;align-items:center;gap:10px;flex-wrap:wrap;justify-content:center;">
+  <label style="color:#cfd4d8;font-size:13px;font-family:-apple-system,sans-serif;display:flex;align-items:center;gap:6px;">
+    Umbral chicharra (s):
+    <input id="umbralInput" type="number" min="1" max="60" value="10" style="width:52px;padding:6px 8px;border-radius:6px;border:1px solid #2a2e32;background:#12161a;color:#eef1f3;font-family:ui-monospace,monospace;">
+  </label>
+  <button id="liveDemoBtn" style="background:#ff8a1e;color:#1a1204;font-weight:800;border:none;padding:12px 20px;border-radius:10px;font-size:13px;letter-spacing:.04em;cursor:pointer;font-family:-apple-system,sans-serif;">▶ Probar cuenta regresiva final (con audio)</button>
+</div>
+
+<div class="caption">Mockup interactivo — tocá los botones de arriba para ver cada estado de la pantalla principal de Modo Carrera. El botón naranja simula un descenso: primero 5 segundos como número entero simple, y al entrar en el umbral configurado, pasa a modo crítico con beep por segundo. Ya no se corta sola en 0 — sigue contando en excedido hasta que tocás el botón "Tocar" del teléfono. Los colores, tipografía y layout son una primera propuesta, no producto final.</div>
+
+<script>
+const states = {
+  largada_no: {
+    top: "Día 2 · Tarde", label: "Tu Relargada", digits: "4:12", horaAbs: "14:30:00",
+    digitsClass: "", chip: null, sub: "", banner: {type:"no-tocar", text:"No tocar"},
+    tocarDisabled: true, conn:"on", pulsadores:[{role:"Copiloto",conn:"on"}]
+  },
+  largada_si: {
+    top: "Día 2 · Tarde", label: "Tu Relargada", digits: "14", horaAbs: "14:30:00",
+    digitsClass: "", chip: null, sub: "Esta relargada abre PC 5", banner: {type:"debe", text:"Debe tocar"},
+    tocarDisabled:false, conn:"on", pulsadores:[{role:"Copiloto",conn:"on"}]
+  },
+  esperando_control: {
+    top: "Día 2 · Tarde · CH 3", label: "CH 3", digits: "1:47", horaAbs: "16:32",
+    digitsClass:"", chip:null, sub:"No es necesario tocar", banner:null, tocarDisabled:true, conn:"on",
+    chFormat:true, pulsadores:[{role:"Copiloto",conn:"on"}]
+  },
+  ch_enlazado_pc: {
+    top: "Día 2 · Tarde · CH 5", label: "CH 5", digits: "14", horaAbs: "17:05",
+    digitsClass:"", chip:null, sub:"Este CH abre PC 8", banner:{type:"debe", text:"Debe tocar"}, tocarDisabled:false, conn:"on",
+    chFormat:true, pulsadores:[{role:"Copiloto",conn:"on"}]
+  },
+  pc_en_curso: {
+    top: "Día 2 · Tarde · PC 4", label: "PC 4", digits: "8",
+    digitsClass:"", chip:null, sub:"Este PC da comienzo a PC5", banner:null, tocarDisabled:false, conn:"on",
+    chain:[{t:"PC2",d:"+0.34",cls:"pos"},{t:"PC3",d:"-0.12",cls:"neg"}],
+    pulsadores:[{role:"Copiloto",conn:"on"},{role:"Piloto",conn:"on"}]
+  },
+  pc_en_curso_cierra: {
+    top: "Día 2 · Tarde · PC 5", label: "PC 5", digits: "23",
+    digitsClass:"", chip:null, sub:"Este PC cierra el set", banner:null, tocarDisabled:false, conn:"on",
+    chain:[{t:"PC2",d:"+0.34",cls:"pos"},{t:"PC3",d:"-0.12",cls:"neg"},{t:"PC4",d:"+0.08",cls:"pos"}],
+    pulsadores:[{role:"Copiloto",conn:"on"},{role:"Piloto",conn:"on"}]
+  },
+  pc_negativo: {
+    top: "Día 2 · Tarde · PC 4", label: "PC 4", digits: "-1",
+    digitsClass:"neg", chip:null, sub:"Este PC da comienzo a PC5", banner:null, tocarDisabled:false, conn:"on",
+    chain:[{t:"PC2",d:"+0.34",cls:"pos"},{t:"PC3",d:"-0.12",cls:"neg"}],
+    pulsadores:[{role:"Copiloto",conn:"on"},{role:"Piloto",conn:"on"}]
+  },
+  debe_tocar_enlace: {
+    top: "Día 2 · Tarde · PC 4", label: "PC 4", digits: "0",
+    digitsClass:"neg", chip:null, sub:"Este PC da comienzo a PC5", banner:{type:"debe", text:"Debe tocar"},
+    tocarDisabled:false, conn:"on",
+    chain:[{t:"PC2",d:"+0.34",cls:"pos"},{t:"PC3",d:"-0.12",cls:"neg"}],
+    pulsadores:[{role:"Copiloto",conn:"on"},{role:"Piloto",conn:"on"}]
+  },
+  pulsador_piloto_desconectado: {
+    top: "Día 2 · Tarde · PC 5", label: "PC 5", digits: "2:03",
+    digitsClass:"", chip:null, sub:"Usá el botón en pantalla o el pulsador del copiloto", banner:{type:"no-tocar", text:"Pulsador piloto sin señal"},
+    tocarDisabled:false, conn:"off",
+    pulsadores:[{role:"Copiloto",conn:"on"},{role:"Piloto",conn:"off"}]
+  }
+};
+
+const labels = {
+  largada_no: "1 · Largada — no enlazada",
+  largada_si: "2 · Largada — enlazada (debe tocar)",
+  esperando_control: "3 · Esperando control (CH, sin toque)",
+  ch_enlazado_pc: "3b · CH enlazado a un PC (con toque)",
+  pc_en_curso: "4 · PC en curso — da comienzo al siguiente",
+  pc_en_curso_cierra: "5 · PC en curso — cierra el set",
+  pc_negativo: "6 · PC — tiempo excedido",
+  debe_tocar_enlace: "7 · Alerta debe tocar (últimos segundos)",
+  pulsador_piloto_desconectado: "8 · Pulsador piloto desconectado"
+};
+
+const els = {
+  top: document.getElementById("topContext"),
+  label: document.getElementById("labelMain"),
+  digits: document.getElementById("digits"),
+  chip: document.getElementById("chip"),
+  sub: document.getElementById("sublabel"),
+  banner: document.getElementById("banner"),
+  tocar: document.getElementById("tocarBtn"),
+  pulsList: document.getElementById("pulsList"),
+};
+
+function applyState(key){
+  const s = states[key];
+  els.top.textContent = s.top;
+  els.label.textContent = s.label;
+  els.digits.textContent = s.digits;
+  els.digits.className = "digits " + (s.digitsClass || "");
+
+  const horaAbsEl = document.getElementById("horaAbs");
+  if(s.horaAbs){
+    horaAbsEl.textContent = s.horaAbs;
+    horaAbsEl.className = "hora-abs show";
+  } else {
+    horaAbsEl.className = "hora-abs";
+  }
+
+  if(s.chip){
+    els.chip.style.visibility = "visible";
+    els.chip.className = "chip " + s.chip.cls;
+    els.chip.textContent = s.chip.text;
+  } else {
+    els.chip.style.visibility = "hidden";
+  }
+
+  els.sub.textContent = s.sub || "";
+
+  const chainEl = document.getElementById("chain");
+  chainEl.innerHTML = "";
+  (s.chain || []).forEach(c=>{
+    const span = document.createElement("span");
+    span.className = "item " + c.cls;
+    span.textContent = c.t + " " + c.d;
+    chainEl.appendChild(span);
+  });
+
+  if(s.banner){
+    els.banner.className = "banner show " + s.banner.type;
+    els.banner.textContent = s.banner.text;
+  } else {
+    els.banner.className = "banner";
+  }
+
+  els.tocar.className = "tocar" + (s.tocarDisabled ? " disabled" : "");
+
+  els.pulsList.innerHTML = "";
+  (s.pulsadores || [{role:"Copiloto", conn:s.conn}]).forEach(p=>{
+    const row = document.createElement("div");
+    row.className = "puls" + (p.conn === "off" ? " off" : "");
+    const dot = document.createElement("span");
+    dot.className = "dot";
+    const txt = document.createElement("span");
+    txt.textContent = p.role + " · " + (p.conn === "off" ? "sin señal" : "conectado");
+    row.appendChild(dot);
+    row.appendChild(txt);
+    els.pulsList.appendChild(row);
+  });
+
+  document.querySelectorAll(".controls button").forEach(b=>{
+    b.classList.toggle("active", b.dataset.key === key);
+  });
+}
+
+const wrap = document.getElementById("stateButtons");
+Object.keys(states).forEach(key=>{
+  const b = document.createElement("button");
+  b.textContent = labels[key];
+  b.dataset.key = key;
+  b.onclick = ()=>applyState(key);
+  wrap.appendChild(b);
+});
+
+applyState("largada_no");
+
+let audioCtx = null;
+function beep(freq){
+  try{
+    if(!audioCtx) audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+    const osc = audioCtx.createOscillator();
+    const gain = audioCtx.createGain();
+    osc.type = "sine";
+    osc.frequency.value = freq;
+    gain.gain.setValueAtTime(0.001, audioCtx.currentTime);
+    gain.gain.exponentialRampToValueAtTime(0.25, audioCtx.currentTime + 0.01);
+    gain.gain.exponentialRampToValueAtTime(0.001, audioCtx.currentTime + 0.12);
+    osc.connect(gain); gain.connect(audioCtx.destination);
+    osc.start(); osc.stop(audioCtx.currentTime + 0.13);
+  }catch(e){}
+}
+
+function formatTime(totalSeconds){
+  const neg = totalSeconds < 0;
+  const t = Math.abs(totalSeconds);
+  const cs = Math.floor((t * 100) % 100);
+  const wholeSec = Math.floor(t);
+  const h = Math.floor(wholeSec / 3600);
+  const m = Math.floor((wholeSec % 3600) / 60);
+  const s = wholeSec % 60;
+  let core;
+  if(h > 0){
+    core = h + ":" + String(m).padStart(2,"0") + ":" + String(s).padStart(2,"0");
+  } else if(m > 0){
+    core = m + ":" + String(s).padStart(2,"0");
+  } else {
+    core = String(s);
+  }
+  return (neg ? "-" : "") + core + "." + String(cs).padStart(2,"0");
+}
+
+function formatTimeMs(totalMs){
+  const s = Math.floor(totalMs / 1000);
+  const cs = Math.floor((totalMs % 1000) / 10);
+  return String(s) + "." + String(cs).padStart(2,"0");
+}
+
+let liveRAF = null;
+function endLiveDemo(){
+  if(!liveRAF) return;
+  cancelAnimationFrame(liveRAF);
+  liveRAF = null;
+  const activeKey = document.querySelector(".controls button.active")?.dataset.key || "pc_en_curso";
+  applyState(activeKey);
+}
+
+document.getElementById("liveDemoBtn").onclick = function(){
+  if(liveRAF) return;
+  const umbralSeg = Math.max(1, parseInt(document.getElementById("umbralInput").value, 10) || 10);
+  const extraSeconds = 5; // tramo previo de conteo entero simple, solo para que la demo se vea completa
+  const criticalMs = umbralSeg * 1000;
+  const totalMs = criticalMs + extraSeconds * 1000;
+  const start = performance.now();
+
+  // Los beeps del tramo critico se programan con horarios exactos de reloj,
+  // independientes de la animacion, para que coincidan justo con cada K.00.
+  // No hay beep despues del 0: a partir de ahi la pantalla sigue contando
+  // en excedido, en silencio, hasta que se toque.
+  for(let r = umbralSeg - 1; r >= 0; r--){
+    const atMs = totalMs - r * 1000;
+    setTimeout(()=>beep(r <= 0 ? 1400 : 880), atMs);
+  }
+
+  function tick(now){
+    const elapsedMs = Math.round(now - start);
+    const remainingMsSigned = totalMs - elapsedMs; // ya no se recorta en 0: puede ir negativo
+    const inCritical = remainingMsSigned <= criticalMs;
+
+    els.digits.className = inCritical ? "digits critical" + (remainingMsSigned < 0 ? " neg" : "") : "digits";
+    const wholeSeconds = Math.floor(remainingMsSigned / 1000); // simetrico: ...2,1,0,-1,-2... sin saltos
+    els.digits.textContent = (wholeSeconds < 0 ? "-" : "") + Math.abs(wholeSeconds);
+
+    liveRAF = requestAnimationFrame(tick);
+  }
+  liveRAF = requestAnimationFrame(tick);
+};
+
+// Mientras la demo esta corriendo, el boton Tocar real es el que efectivamente
+// detiene la cuenta regresiva — igual que en carrera: nunca se corta sola.
+document.getElementById("tocarBtn").addEventListener("click", ()=>{
+  if(liveRAF) endLiveDemo();
+});
+</script>
+</body>
+</html>

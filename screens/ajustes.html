@@ -1,0 +1,180 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Ajustes — Mockup</title>
+<style>
+  :root{
+    --bg-app:#0b0d0f; --bg-panel:#14171a; --bg-panel-2:#1a1e22;
+    --amber:#ff8a1e; --amber-dim:rgba(255,138,30,0.14);
+    --green:#35d07f; --red:#ff5b5b;
+    --muted:#8a929a; --line:#262b30; --text:#f2f4f5;
+    --mono: ui-monospace, "SF Mono", Menlo, Consolas, monospace;
+    --sans: -apple-system, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+  }
+  *{box-sizing:border-box;}
+  html,body{margin:0;padding:0;background:#1a1d20;min-height:100vh;display:flex;flex-direction:column;align-items:center;font-family:var(--sans);gap:24px;padding:32px 16px 48px;}
+  .caption{color:#9aa2a9;font-size:13px;text-align:center;max-width:440px;line-height:1.5;}
+  .phone{width:390px;max-width:92vw;height:860px;max-height:88vh;background:var(--bg-app);border-radius:44px;border:2px solid #2a2e32;box-shadow:0 30px 60px rgba(0,0,0,.5), inset 0 0 0 8px #000;overflow:hidden;display:flex;flex-direction:column;}
+  .topbar{padding:20px 20px 4px;}
+  .title{font-size:22px;font-weight:800;color:var(--text);}
+  .scroll{flex:1;overflow-y:auto;padding:8px 16px 24px;display:flex;flex-direction:column;gap:18px;scrollbar-width:none;-ms-overflow-style:none;}
+  .scroll::-webkit-scrollbar{display:none;width:0;height:0;}
+  .section{display:flex;flex-direction:column;gap:8px;}
+  .sectionTitle{font-size:11px;color:var(--muted);text-transform:uppercase;letter-spacing:.06em;font-weight:800;padding:0 4px;}
+  .card{background:var(--bg-panel);border:1px solid var(--line);border-radius:14px;overflow:hidden;}
+  .item{padding:13px 14px;display:flex;align-items:center;gap:10px;border-bottom:1px solid var(--line);}
+  .item:last-child{border-bottom:none;}
+  .item-label{flex:1;display:flex;flex-direction:column;gap:2px;}
+  .item-label .t{font-size:14px;color:var(--text);font-weight:600;}
+  .item-label .d{font-size:11px;color:var(--muted);}
+  .item input[type="text"], .item input[type="number"], .item select{
+    background:var(--bg-panel-2); border:1px solid var(--line); color:var(--text);
+    padding:8px 10px; border-radius:8px; font-family:var(--mono); font-size:13px; width:92px; text-align:right;
+  }
+  .item select{width:auto; font-family:var(--sans); text-align:left;}
+  .switch{width:44px;height:26px;background:var(--bg-panel-2);border:1px solid var(--line);border-radius:20px;position:relative;cursor:pointer;flex-shrink:0;}
+  .switch.on{background:rgba(255,138,30,.25);border-color:var(--amber);}
+  .switch .knob{position:absolute;top:2px;left:2px;width:20px;height:20px;border-radius:50%;background:var(--muted);transition:left .15s ease, background .15s ease;}
+  .switch.on .knob{left:20px;background:var(--amber);}
+  .derived{font-family:var(--mono);color:var(--amber);font-weight:800;font-size:14px;}
+  .statusline{padding:4px 14px 12px;font-size:12px;color:var(--muted);display:flex;align-items:center;gap:6px;}
+  .dot{width:7px;height:7px;border-radius:50%;background:var(--green);flex-shrink:0;}
+  .dot.off{background:var(--red);}
+  .calbtn{
+    width:calc(100% - 28px); margin:6px 14px 14px; padding:13px; border-radius:10px; border:none;
+    background:var(--amber); color:#1a1204; font-weight:800; font-size:14px; cursor:pointer;
+  }
+  .pairbtn{
+    background:none; border:1px solid var(--line); color:var(--muted); padding:6px 12px;
+    border-radius:8px; font-size:12px; font-weight:700; cursor:pointer;
+  }
+  .pairbtn.connected{color:var(--green); border-color:rgba(53,208,127,.4);}
+  .disabled{opacity:.4; pointer-events:none;}
+</style>
+</head>
+<body>
+
+<div class="phone">
+  <div class="topbar"><div class="title">Ajustes</div></div>
+  <div class="scroll">
+
+    <div class="section">
+      <div class="sectionTitle">Auto</div>
+      <div class="card">
+        <div class="item">
+          <div class="item-label"><span class="t">Número del auto</span></div>
+          <input type="text" id="numeroInput" value="12">
+        </div>
+        <div class="item">
+          <div class="item-label"><span class="t">Año del auto</span><span class="d">Determina el coeficiente de penalización</span></div>
+          <input type="text" id="anioInput" value="1965">
+        </div>
+        <div class="item">
+          <div class="item-label"><span class="t">Coeficiente aplicado</span></div>
+          <span class="derived" id="coefValue">1.30</span>
+        </div>
+      </div>
+    </div>
+
+    <div class="section">
+      <div class="sectionTitle">Sincronización del reloj</div>
+      <div class="card">
+        <div class="item">
+          <div class="item-label"><span class="t">Método preferido</span></div>
+          <select id="metodoSelect">
+            <option value="camara">Cámara</option>
+            <option value="https">HTTPS</option>
+            <option value="manual">Manual</option>
+          </select>
+        </div>
+      </div>
+      <button class="calbtn" id="calBtn">Calibrar hora oficial de hoy</button>
+      <div class="statusline" id="calStatus"><span class="dot off"></span><span>Todavía no calibraste hoy</span></div>
+    </div>
+
+    <div class="section">
+      <div class="sectionTitle">Pulsadores</div>
+      <div class="card">
+        <div class="item">
+          <div class="item-label"><span class="t">Modo dual piloto-copiloto</span><span class="d">Promedia el toque de ambos pulsadores</span></div>
+          <div class="switch" id="dualSwitch"><div class="knob"></div></div>
+        </div>
+        <div class="item" id="tolItem">
+          <div class="item-label"><span class="t">Tolerancia de discrepancia</span><span class="d">Si difieren más, se descarta el outlier</span></div>
+          <input type="text" id="tolInput" value="300"> <span style="color:var(--muted);font-size:12px;">ms</span>
+        </div>
+        <div class="item">
+          <div class="item-label"><span class="t">Pulsador copiloto</span></div>
+          <button class="pairbtn connected" id="pairCopiloto">Conectado</button>
+        </div>
+        <div class="item" id="pairPilotoItem">
+          <div class="item-label"><span class="t">Pulsador piloto</span></div>
+          <button class="pairbtn" id="pairPiloto">Emparejar</button>
+        </div>
+      </div>
+    </div>
+
+    <div class="section">
+      <div class="sectionTitle">Alertas</div>
+      <div class="card">
+        <div class="item">
+          <div class="item-label"><span class="t">Umbral de chicharra</span><span class="d">Segundos antes del cierre para empezar a sonar</span></div>
+          <input type="text" id="umbralInput" value="10"> <span style="color:var(--muted);font-size:12px;">s</span>
+        </div>
+      </div>
+    </div>
+
+  </div>
+</div>
+
+<div class="caption">Mockup interactivo — probá cambiar el año del auto (recalcula el coeficiente), tocar "Calibrar hora oficial de hoy", activar el modo dual (habilita la tolerancia), y emparejar el pulsador del piloto.</div>
+
+<script>
+// Tabla simplificada de coeficientes por año, solo para la demo
+function coefForYear(year){
+  const y = parseInt(year,10);
+  if(isNaN(y)) return "—";
+  if(y < 1931) return "1.60";
+  if(y < 1946) return "1.50";
+  if(y < 1958) return "1.40";
+  if(y < 1966) return "1.30";
+  if(y < 1973) return "1.20";
+  return "1.00";
+}
+
+const anioInput = document.getElementById("anioInput");
+const coefValue = document.getElementById("coefValue");
+anioInput.oninput = ()=>{ coefValue.textContent = coefForYear(anioInput.value); };
+coefValue.textContent = coefForYear(anioInput.value);
+
+const calBtn = document.getElementById("calBtn");
+const calStatus = document.getElementById("calStatus");
+calBtn.onclick = ()=>{
+  const now = new Date();
+  const hh = String(now.getHours()).padStart(2,"0");
+  const mm = String(now.getMinutes()).padStart(2,"0");
+  calStatus.innerHTML = '<span class="dot"></span><span>Calibrado hoy a las ' + hh + ':' + mm + ' · offset +0.02s</span>';
+};
+
+const dualSwitch = document.getElementById("dualSwitch");
+const tolItem = document.getElementById("tolItem");
+const pairPilotoItem = document.getElementById("pairPilotoItem");
+function setDual(on){
+  dualSwitch.className = "switch" + (on ? " on" : "");
+  tolItem.className = "item" + (on ? "" : " disabled");
+  pairPilotoItem.className = "item" + (on ? "" : " disabled");
+}
+let dualOn = false;
+dualSwitch.onclick = ()=>{ dualOn = !dualOn; setDual(dualOn); };
+setDual(dualOn);
+
+const pairPiloto = document.getElementById("pairPiloto");
+pairPiloto.onclick = ()=>{
+  const connected = pairPiloto.classList.toggle("connected");
+  pairPiloto.textContent = connected ? "Conectado" : "Emparejar";
+};
+</script>
+</body>
+</html>

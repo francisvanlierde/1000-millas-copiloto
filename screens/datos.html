@@ -1,0 +1,540 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Datos — Mockup</title>
+<style>
+  :root{
+    --bg-app:#0b0d0f; --bg-panel:#14171a; --bg-panel-2:#1a1e22;
+    --amber:#ff8a1e; --amber-dim:rgba(255,138,30,0.14);
+    --blue:#5b9dff; --blue-dim:rgba(91,157,255,0.14);
+    --teal:#35c9c9; --teal-dim:rgba(53,201,201,0.14);
+    --muted:#8a929a; --line:#262b30; --text:#f2f4f5; --red:#ff5b5b;
+    --mono: ui-monospace, "SF Mono", Menlo, Consolas, monospace;
+    --sans: -apple-system, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+  }
+  *{box-sizing:border-box;}
+  html,body{margin:0;padding:0;background:#1a1d20;min-height:100vh;display:flex;flex-direction:column;align-items:center;font-family:var(--sans);gap:24px;padding:32px 16px 48px;}
+  .caption{color:#9aa2a9;font-size:13px;text-align:center;max-width:440px;line-height:1.5;}
+  .phone{width:390px;max-width:92vw;height:860px;max-height:88vh;background:var(--bg-app);border-radius:44px;border:2px solid #2a2e32;box-shadow:0 30px 60px rgba(0,0,0,.5), inset 0 0 0 8px #000;overflow:hidden;display:flex;flex-direction:column;position:relative;}
+  .topbar{padding:20px 20px 0;display:flex;flex-direction:column;gap:12px;}
+  .title{font-size:22px;font-weight:800;color:var(--text);}
+  .subtitle{font-size:12px;color:var(--muted);}
+  .daytabs{display:flex;gap:8px;padding:0 20px 12px;border-bottom:1px solid var(--line);flex-wrap:wrap;}
+  .daytab{padding:8px 14px;border-radius:20px;font-size:13px;font-weight:700;background:var(--bg-panel-2);color:var(--muted);border:1px solid var(--line);cursor:pointer;}
+  .daytab.active{background:var(--amber-dim);color:var(--amber);border-color:rgba(255,138,30,.4);}
+  .daytab.add{color:var(--text);border-style:dashed;}
+
+  .horariosBox{margin:12px 16px 0;padding:12px 14px;background:var(--bg-panel);border:1px solid var(--line);border-radius:12px;}
+  .horariosBox h4{margin:0 0 8px;font-size:12px;color:var(--muted);text-transform:uppercase;letter-spacing:.05em;font-weight:800;}
+  .horarioItem{display:flex;align-items:center;gap:8px;margin-bottom:6px;}
+  .horarioItem input.nombre{flex:1.2;font-family:var(--sans);background:var(--bg-panel-2);border:1px solid var(--line);color:var(--text);padding:7px 9px;border-radius:7px;font-size:13px;}
+  .horarioItem button{background:none;border:none;color:var(--red);cursor:pointer;font-size:15px;padding:0 4px;}
+  .addHorario{background:none;border:1px dashed var(--line);color:var(--muted);border-radius:8px;padding:6px 10px;font-size:12px;cursor:pointer;font-weight:700;}
+  .addHorario:hover{color:var(--amber);border-color:var(--amber);}
+
+  .timepill{
+    flex:1; background:var(--bg-panel-2); border:1px solid var(--line); color:var(--amber);
+    padding:7px 9px; border-radius:7px; font-size:13px; font-family:var(--mono); font-weight:700;
+    cursor:pointer; text-align:center;
+  }
+
+  .list{flex:1;overflow-y:auto;padding:12px 16px 8px;display:flex;flex-direction:column;gap:8px;scrollbar-width:none;-ms-overflow-style:none;}
+  .list::-webkit-scrollbar{display:none;width:0;height:0;}
+  .row{background:var(--bg-panel);border:1px solid var(--line);border-radius:12px;padding:12px 14px;display:flex;flex-direction:column;gap:6px;transition:opacity .1s ease;}
+  .row.dragging{opacity:.35;}
+  .row.dragover{border-color:var(--amber);}
+  .row-top{display:flex;align-items:center;gap:10px;}
+  .handle{cursor:grab;color:var(--muted);font-size:17px;padding:0 2px;touch-action:none;user-select:none;line-height:1;background:none;border:none;}
+  .handle:active{cursor:grabbing;color:var(--amber);}
+  .badge{font-family:var(--mono);font-weight:800;font-size:11px;padding:4px 8px;border-radius:6px;letter-spacing:.03em;flex-shrink:0;}
+  .badge.CH{background:var(--blue-dim);color:var(--blue);}
+  .badge.PCSET{background:var(--amber-dim);color:var(--amber);}
+  .badge.CS{background:var(--teal-dim);color:var(--teal);}
+  .row-name{font-weight:700;color:var(--text);font-size:14px;flex:1;cursor:pointer;}
+  .row-time{font-family:var(--mono);color:var(--muted);font-size:12px;cursor:pointer;text-align:right;}
+  .chainpill{display:inline-flex;align-items:center;gap:4px;font-size:11px;color:var(--amber);background:var(--amber-dim);padding:2px 8px;border-radius:20px;font-weight:700;width:fit-content;}
+  .editform{display:none;flex-direction:column;gap:10px;margin-top:8px;padding-top:10px;border-top:1px solid var(--line);}
+  .editform.open{display:flex;}
+  .field{display:flex;flex-direction:column;gap:4px;}
+  .field label{font-size:11px;color:var(--muted);text-transform:uppercase;letter-spacing:.05em;font-weight:700;}
+  .field input, .field select{background:var(--bg-panel-2);border:1px solid var(--line);color:var(--text);padding:9px 10px;border-radius:8px;font-family:var(--sans);font-size:14px;}
+  .field input[type="text"]{font-family:var(--mono);}
+  .row2{display:flex;gap:10px;}
+  .row2 .field{flex:1;}
+  .pcgrid{display:flex;flex-direction:column;gap:6px;}
+  .pcgrid .pcitem{display:flex;align-items:center;gap:8px;}
+  .pcgrid .pclabel{font-family:var(--mono);font-size:12px;color:var(--amber);width:44px;flex-shrink:0;font-weight:700;}
+  .deleterow{color:var(--red);font-size:12px;font-weight:700;background:none;border:none;cursor:pointer;align-self:flex-start;padding:4px 0;}
+  .addrow{display:flex;gap:6px;padding:10px 16px 16px;}
+  .addbtn{flex:1;padding:12px 6px;border-radius:10px;border:1px dashed var(--line);background:none;color:var(--muted);font-weight:700;font-size:12px;cursor:pointer;}
+  .addbtn:hover{color:var(--amber);border-color:var(--amber);}
+
+  .padOverlay{
+    position:absolute; inset:0; background:rgba(0,0,0,.55); display:none;
+    align-items:flex-end; z-index:20;
+  }
+  .padOverlay.show{display:flex;}
+  .padSheet{
+    width:100%; background:var(--bg-panel); border-top:1px solid var(--line);
+    border-radius:20px 20px 0 0; padding:16px 16px 20px; display:flex; flex-direction:column; gap:14px;
+  }
+  .padHeader{font-size:12px; color:var(--muted); text-transform:uppercase; letter-spacing:.06em; font-weight:800; text-align:center;}
+  .padDisplay{font-family:var(--mono); font-size:34px; font-weight:800; color:var(--amber); text-align:center; letter-spacing:.03em;}
+  .padGrid{display:grid; grid-template-columns:repeat(3,1fr); gap:8px;}
+  .padGrid button{
+    padding:16px 0; border-radius:10px; border:1px solid var(--line); background:var(--bg-panel-2);
+    color:var(--text); font-size:20px; font-weight:700; cursor:pointer; font-family:var(--mono);
+  }
+  .padGrid button:active{background:var(--amber-dim); color:var(--amber);}
+  .padGrid button.wide{grid-column:span 1;}
+  .padDone{
+    padding:14px; border-radius:10px; border:none; background:var(--amber); color:#1a1204;
+    font-weight:800; font-size:15px; cursor:pointer;
+  }
+</style>
+</head>
+<body>
+
+<div class="phone">
+  <div class="topbar">
+    <div class="title">Datos</div>
+    <div class="subtitle">Arrastrá con ⠿ para reordenar. Tocá un renglón para editarlo.</div>
+  </div>
+  <div class="daytabs" id="dayTabs"></div>
+  <div class="horariosBox">
+    <h4>Horarios de la etapa (largada / relargada)</h4>
+    <div id="horariosList"></div>
+    <button class="addHorario" id="addHorarioBtn">+ Horario</button>
+  </div>
+  <div class="list" id="list"></div>
+  <div class="addrow">
+    <button class="addbtn" id="addCH">+ CH</button>
+    <button class="addbtn" id="addCS">+ CS</button>
+    <button class="addbtn" id="addPCSET">+ Set de PC</button>
+  </div>
+
+  <div class="padOverlay" id="padOverlay">
+    <div class="padSheet">
+      <div class="padHeader" id="padHeader">Hora</div>
+      <div class="padDisplay" id="padDisplay">00:00:00</div>
+      <div class="padGrid" id="padGrid"></div>
+      <button class="padDone" id="padDone">Listo</button>
+    </div>
+  </div>
+</div>
+
+<div class="caption">Mockup interactivo — cargá primero los horarios de la etapa (Largada A, Relargada B, etc.). Todo CH y CS se programa con referencia + offset, nunca hora suelta. Los tiempos se ingresan con el teclado numérico propio de la app, no con el teclado del sistema. Arrastrá el ⠿ para reordenar.</div>
+
+<script>
+let dayHorarios = {
+  "Etapa 1": [ {id:100, nombre:"Largada A", hora:"080000"}, {id:101, nombre:"Relargada B", hora:"141500"} ],
+  "Etapa 2": [ {id:102, nombre:"Largada A", hora:"080000"} ]
+};
+let days = {
+  "Etapa 1": [
+    {id:1, itemType:"CH", nombre:"CH Largada A", refId:100, offset:"000000"},
+    {id:2, itemType:"PCSET", primerNumero:1, cantidad:3, origen:"libre", refId:null, chId:null, tiempos:["000011","000027","000013"]},
+    {id:3, itemType:"CS", nombre:"1 · Parador El Mangrullo", refId:100, offset:"015500"},
+    {id:4, itemType:"CH", nombre:"CH Cruce de Sañico", refId:100, offset:"040800"},
+    {id:5, itemType:"CH", nombre:"Relargada B", refId:101, offset:"000000"}
+  ],
+  "Etapa 2": [
+    {id:6, itemType:"CH", nombre:"CH Largada A", refId:102, offset:"000000"}
+  ]
+};
+let activeDay = "Etapa 1";
+let openRowId = null;
+let nextId = 7;
+let nextHorarioId = 200;
+
+const dayTabsEl = document.getElementById("dayTabs");
+const listEl = document.getElementById("list");
+const horariosListEl = document.getElementById("horariosList");
+let dragSrcIdx = null;
+
+// ---------- Teclado numerico propio para hh:mm:ss ----------
+const padOverlay = document.getElementById("padOverlay");
+const padHeader = document.getElementById("padHeader");
+const padDisplay = document.getElementById("padDisplay");
+const padGrid = document.getElementById("padGrid");
+const padDone = document.getElementById("padDone");
+let padBuffer = "000000";
+let padOnConfirm = null;
+
+function fmtBuffer(buf){ return buf.slice(0,2)+":"+buf.slice(2,4)+":"+buf.slice(4,6); }
+
+function openTimePad(label, currentValue, onConfirm){
+  padHeader.textContent = label;
+  padBuffer = (currentValue || "000000").replace(/:/g,"").padStart(6,"0").slice(-6);
+  padDisplay.textContent = fmtBuffer(padBuffer);
+  padOnConfirm = onConfirm;
+  padOverlay.classList.add("show");
+}
+function closeTimePad(){ padOverlay.classList.remove("show"); }
+
+padGrid.innerHTML = "";
+["1","2","3","4","5","6","7","8","9","⌫","0","✕"].forEach(k=>{
+  const b = document.createElement("button");
+  b.textContent = k;
+  b.onclick = ()=>{
+    if(k === "⌫"){ padBuffer = ("0"+padBuffer).slice(0,6); }
+    else if(k === "✕"){ closeTimePad(); return; }
+    else { padBuffer = (padBuffer + k).slice(-6); }
+    padDisplay.textContent = fmtBuffer(padBuffer);
+  };
+  padGrid.appendChild(b);
+});
+padDone.onclick = ()=>{
+  if(padOnConfirm) padOnConfirm(padBuffer);
+  closeTimePad();
+};
+
+function timeField(labelText, value, onChange){
+  const wrap = document.createElement("div");
+  wrap.className = "field";
+  const l = document.createElement("label"); l.textContent = labelText;
+  const pill = document.createElement("div");
+  pill.className = "timepill";
+  pill.textContent = fmtBuffer((value||"000000").replace(/:/g,"").padStart(6,"0").slice(-6));
+  pill.onclick = ()=>{
+    openTimePad(labelText, value, (newVal)=>{
+      onChange(newVal);
+      pill.textContent = fmtBuffer(newVal);
+      saveState();
+    });
+  };
+  wrap.appendChild(l); wrap.appendChild(pill);
+  return wrap;
+}
+// -------------------------------------------------------------
+
+function renderTabs(){
+  dayTabsEl.innerHTML = "";
+  Object.keys(days).forEach(day=>{
+    const b = document.createElement("button");
+    b.className = "daytab" + (day === activeDay ? " active" : "");
+    b.textContent = day;
+    b.onclick = ()=>{ activeDay = day; openRowId = null; renderAll(); };
+    dayTabsEl.appendChild(b);
+  });
+  const addDay = document.createElement("button");
+  addDay.className = "daytab add";
+  addDay.textContent = "+ Etapa";
+  addDay.onclick = ()=>{
+    const n = Object.keys(days).length + 1;
+    const name = "Etapa " + n;
+    days[name] = [];
+    dayHorarios[name] = [];
+    activeDay = name;
+    renderAll();
+  };
+  dayTabsEl.appendChild(addDay);
+}
+
+function renderHorarios(){
+  horariosListEl.innerHTML = "";
+  (dayHorarios[activeDay] || []).forEach(h=>{
+    const row = document.createElement("div");
+    row.className = "horarioItem";
+    const nombreInp = document.createElement("input");
+    nombreInp.className = "nombre"; nombreInp.type = "text"; nombreInp.value = h.nombre;
+    nombreInp.oninput = ()=>{ h.nombre = nombreInp.value; renderList(); };
+
+    const pill = document.createElement("div");
+    pill.className = "timepill";
+    pill.style.flex = "1";
+    pill.textContent = fmtBuffer(h.hora);
+    pill.onclick = ()=>{
+      openTimePad(h.nombre, h.hora, (newVal)=>{ h.hora = newVal; pill.textContent = fmtBuffer(newVal); saveState(); });
+    };
+
+    const del = document.createElement("button");
+    del.textContent = "✕";
+    del.onclick = ()=>{
+      dayHorarios[activeDay] = dayHorarios[activeDay].filter(x=>x.id!==h.id);
+      renderHorarios(); renderList();
+    };
+    row.appendChild(nombreInp); row.appendChild(pill); row.appendChild(del);
+    horariosListEl.appendChild(row);
+  });
+  saveState();
+}
+
+function horarioNombre(refId){
+  const h = (dayHorarios[activeDay]||[]).find(x=>x.id===refId);
+  return h ? h.nombre : "(sin horario)";
+}
+function refOptions(){
+  return (dayHorarios[activeDay]||[]).map(h=>[String(h.id), h.nombre]);
+}
+function pcSetLabel(item){
+  const last = item.primerNumero + item.cantidad - 1;
+  const rango = item.cantidad > 1 ? ("PC " + item.primerNumero + "–" + last) : ("PC " + item.primerNumero);
+  return rango + " · " + item.cantidad + " prueba" + (item.cantidad>1?"s":"");
+}
+function chNombreById(id){
+  const item = (days[activeDay]||[]).find(x=>x.itemType==="CH" && x.id===id);
+  return item ? item.nombre : "CH";
+}
+function chOptions(){
+  return (days[activeDay]||[]).filter(x=>x.itemType==="CH").map(x=>[String(x.id), x.nombre]);
+}
+function origenPCLabel(item){
+  if(item.origen === "libre") return "Largada libre";
+  if(item.origen === "CH") return "Enlazado a " + chNombreById(item.chId);
+  if(item.origen === "ref") return horarioNombre(item.refId) + " +" + fmtBuffer(item.offset||"000000");
+  return "";
+}
+
+function renderList(){
+  listEl.innerHTML = "";
+  const items = days[activeDay];
+  items.forEach((c, idx)=>{
+    const row = document.createElement("div");
+    row.className = "row";
+    row.dataset.idx = idx;
+
+    row.addEventListener("dragover", e=>{ e.preventDefault(); row.classList.add("dragover"); });
+    row.addEventListener("dragleave", ()=> row.classList.remove("dragover"));
+    row.addEventListener("drop", e=>{
+      e.preventDefault();
+      row.classList.remove("dragover");
+      if(dragSrcIdx === null || dragSrcIdx === idx) return;
+      const moved = items.splice(dragSrcIdx,1)[0];
+      items.splice(idx,0,moved);
+      dragSrcIdx = null;
+      renderList();
+    });
+
+    const top = document.createElement("div");
+    top.className = "row-top";
+
+    const handle = document.createElement("button");
+    handle.className = "handle";
+    handle.textContent = "⠿";
+    handle.draggable = true;
+    handle.addEventListener("dragstart", e=>{
+      dragSrcIdx = idx;
+      row.classList.add("dragging");
+      e.dataTransfer.effectAllowed = "move";
+    });
+    handle.addEventListener("dragend", ()=> row.classList.remove("dragging"));
+
+    const badge = document.createElement("span");
+    const name = document.createElement("span");
+    name.className = "row-name";
+    const time = document.createElement("span");
+    time.className = "row-time";
+
+    if(c.itemType === "CH"){
+      badge.className = "badge CH"; badge.textContent = "CH";
+      name.textContent = c.nombre;
+      time.textContent = horarioNombre(c.refId) + " +" + fmtBuffer(c.offset||"000000");
+    } else if(c.itemType === "CS"){
+      badge.className = "badge CS"; badge.textContent = "CS";
+      name.textContent = c.nombre;
+      time.textContent = horarioNombre(c.refId) + " +" + fmtBuffer(c.offset||"000000");
+    } else {
+      badge.className = "badge PCSET"; badge.textContent = "PC";
+      name.textContent = pcSetLabel(c);
+      time.textContent = origenPCLabel(c);
+    }
+
+    const toggleOpen = ()=>{ openRowId = (openRowId === c.id) ? null : c.id; renderList(); };
+    name.onclick = toggleOpen;
+    time.onclick = toggleOpen;
+
+    top.appendChild(handle);
+    top.appendChild(badge);
+    top.appendChild(name);
+    top.appendChild(time);
+    row.appendChild(top);
+
+    if(c.itemType === "PCSET" && c.origen === "CH"){
+      const pill = document.createElement("span");
+      pill.className = "chainpill";
+      pill.textContent = "🔗 arranca con " + chNombreById(c.chId);
+      row.appendChild(pill);
+    }
+
+    const form = document.createElement("div");
+    form.className = "editform" + (openRowId === c.id ? " open" : "");
+    buildForm(form, c, items, idx);
+    row.appendChild(form);
+
+    listEl.appendChild(row);
+  });
+  saveState();
+}
+
+function field(labelText, type, value, onChange, disabled){
+  const wrap = document.createElement("div");
+  wrap.className = "field";
+  const l = document.createElement("label"); l.textContent = labelText;
+  const i = document.createElement("input");
+  i.type = type; i.value = value || ""; if(disabled) i.disabled = true;
+  i.oninput = ()=>onChange(i.value);
+  i.onfocus = ()=>i.select();
+  wrap.appendChild(l); wrap.appendChild(i);
+  return wrap;
+}
+function selectField(labelText, options, value, onChange){
+  const wrap = document.createElement("div");
+  wrap.className = "field";
+  const l = document.createElement("label"); l.textContent = labelText;
+  const s = document.createElement("select");
+  options.forEach(([val,txt])=>{
+    const opt = document.createElement("option");
+    opt.value = val; opt.textContent = txt;
+    if(val === value) opt.selected = true;
+    s.appendChild(opt);
+  });
+  s.onchange = ()=>onChange(s.value);
+  wrap.appendChild(l); wrap.appendChild(s);
+  return wrap;
+}
+function deleteBtn(items, idx){
+  const del = document.createElement("button");
+  del.className = "deleterow";
+  del.textContent = "Eliminar";
+  del.onclick = ()=>{ items.splice(idx,1); openRowId = null; renderList(); };
+  return del;
+}
+
+function buildForm(form, c, items, idx){
+  if(c.itemType === "CH" || c.itemType === "CS"){
+    form.appendChild(field("Nombre", "text", c.nombre, v=>{c.nombre=v; renderList();}));
+    const opts = refOptions();
+    form.appendChild(selectField("Horario de referencia", opts, String(c.refId), v=>{c.refId=parseInt(v,10); renderList();}));
+    form.appendChild(timeField("Offset (hh:mm:ss)", c.offset, v=>{c.offset=v; renderList();}));
+    form.appendChild(deleteBtn(items, idx));
+  }
+  else {
+    const row2 = document.createElement("div");
+    row2.className = "row2";
+    row2.appendChild(field("Número del primero", "text", String(c.primerNumero), v=>{
+      c.primerNumero = parseInt(v,10) || 1; renderList();
+    }));
+    row2.appendChild(field("Cantidad de PC", "text", String(c.cantidad), v=>{
+      const n = Math.max(1, parseInt(v,10) || 1);
+      const old = c.tiempos;
+      c.tiempos = Array.from({length:n}, (_,i)=> old[i] || "000130");
+      c.cantidad = n;
+      renderList();
+    }));
+    form.appendChild(row2);
+
+    const origenOpts = [["libre","Largada libre"], ["CH","Enlazado a un CH"]].concat(
+      refOptions().map(([val,txt])=>["ref:"+val, txt])
+    );
+    const currentOrigenVal = c.origen === "ref" ? ("ref:"+c.refId) : c.origen;
+    form.appendChild(selectField("Origen del primer PC", origenOpts, currentOrigenVal, v=>{
+      if(v.startsWith("ref:")){ c.origen="ref"; c.refId=parseInt(v.slice(4),10); }
+      else {
+        c.origen=v;
+        if(v === "CH" && !c.chId){
+          const opts = chOptions();
+          if(opts.length) c.chId = parseInt(opts[0][0], 10);
+        }
+      }
+      renderList();
+    }));
+
+    if(c.origen === "CH"){
+      const opciones = chOptions();
+      if(opciones.length === 0){
+        const aviso = document.createElement("div");
+        aviso.style.cssText = "font-size:12px;color:var(--muted);padding:4px 0;";
+        aviso.textContent = "Todavía no hay ningún CH cargado en esta etapa.";
+        form.appendChild(aviso);
+      } else {
+        form.appendChild(selectField("¿Cuál CH?", opciones, String(c.chId), v=>{c.chId=parseInt(v,10); renderList();}));
+      }
+    }
+    if(c.origen === "ref"){
+      form.appendChild(timeField("Offset desde ese horario", c.offset, v=>{c.offset=v;}));
+    }
+
+    const grid = document.createElement("div");
+    grid.className = "pcgrid";
+    for(let i=0;i<c.cantidad;i++){
+      const wrap = document.createElement("div");
+      wrap.className = "pcitem";
+      const lbl = document.createElement("span");
+      lbl.className = "pclabel";
+      lbl.textContent = "PC " + (c.primerNumero + i);
+      const pill = document.createElement("div");
+      pill.className = "timepill";
+      pill.textContent = fmtBuffer(c.tiempos[i] || "000000");
+      pill.onclick = ((index)=>()=>{
+        openTimePad("PC " + (c.primerNumero + index), c.tiempos[index], (newVal)=>{
+          c.tiempos[index] = newVal;
+          pill.textContent = fmtBuffer(newVal);
+          saveState();
+        });
+      })(i);
+      wrap.appendChild(lbl); wrap.appendChild(pill);
+      grid.appendChild(wrap);
+    }
+    form.appendChild(grid);
+    form.appendChild(deleteBtn(items, idx));
+  }
+}
+
+document.getElementById("addHorarioBtn").onclick = ()=>{
+  if(!dayHorarios[activeDay]) dayHorarios[activeDay] = [];
+  dayHorarios[activeDay].push({id:nextHorarioId++, nombre:"Nuevo horario", hora:"000000"});
+  renderHorarios();
+};
+
+document.getElementById("addCH").onclick = ()=>{
+  const items = days[activeDay];
+  const firstRef = (dayHorarios[activeDay]||[])[0];
+  const n = {id:nextId++, itemType:"CH", nombre:"Nuevo CH", refId: firstRef?firstRef.id:null, offset:"000000"};
+  items.push(n); openRowId = n.id; renderList();
+};
+document.getElementById("addCS").onclick = ()=>{
+  const items = days[activeDay];
+  const firstRef = (dayHorarios[activeDay]||[])[0];
+  const n = {id:nextId++, itemType:"CS", nombre:"Nuevo CS", refId: firstRef?firstRef.id:null, offset:"000000"};
+  items.push(n); openRowId = n.id; renderList();
+};
+document.getElementById("addPCSET").onclick = ()=>{
+  const items = days[activeDay];
+  const n = {id:nextId++, itemType:"PCSET", primerNumero:1, cantidad:1, origen:"libre", refId:null, chId:null, tiempos:["000130"]};
+  items.push(n); openRowId = n.id; renderList();
+};
+
+const STORAGE_KEY = "millas_datos_v1";
+
+function saveState(){
+  try{
+    localStorage.setItem(STORAGE_KEY, JSON.stringify({ days, dayHorarios, activeDay, nextId, nextHorarioId }));
+  }catch(e){ /* almacenamiento no disponible, seguimos solo en memoria */ }
+}
+
+function loadState(){
+  try{
+    const raw = localStorage.getItem(STORAGE_KEY);
+    if(!raw) return false;
+    const data = JSON.parse(raw);
+    if(data && data.days){
+      days = data.days;
+      dayHorarios = data.dayHorarios || {};
+      activeDay = data.activeDay || Object.keys(days)[0];
+      nextId = data.nextId || nextId;
+      nextHorarioId = data.nextHorarioId || nextHorarioId;
+      return true;
+    }
+  }catch(e){ /* datos corruptos o inaccesibles, arrancamos con el ejemplo */ }
+  return false;
+}
+
+function renderAll(){ renderTabs(); renderHorarios(); renderList(); saveState(); }
+loadState();
+renderAll();
+</script>
+</body>
+</html>

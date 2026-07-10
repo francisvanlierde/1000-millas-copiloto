@@ -1,11 +1,16 @@
-const CACHE = "millas-v2";
+const CACHE = "millas-v3";
 const FILES = [
   "./index.html",
   "./manifest.json",
-  "./screens/carrera.html",
-  "./screens/datos.html",
-  "./screens/score.html",
-  "./screens/ajustes.html",
+  "./css/app.css",
+  "./js/app.js",
+  "./js/store.js",
+  "./js/engine.js",
+  "./js/timepad.js",
+  "./js/screens/datos.js",
+  "./js/screens/carrera.js",
+  "./js/screens/score.js",
+  "./js/screens/ajustes.js",
   "./icon.png"
 ];
 

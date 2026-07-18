@@ -17,8 +17,27 @@ export function todayMidnightMs(){
   return d.getTime();
 }
 
-export function instantFromHora(horaStr, offsetStr){
-  return todayMidnightMs() + hhmmssToMs(horaStr) + (offsetStr ? hhmmssToMs(offsetStr) : 0);
+export function todayFechaStr(){
+  const d = new Date();
+  const y = d.getFullYear();
+  const m = String(d.getMonth() + 1).padStart(2, "0");
+  const day = String(d.getDate()).padStart(2, "0");
+  return y + "-" + m + "-" + day;
+}
+
+// Medianoche de una fecha "YYYY-MM-DD" puntual (la fecha real de la etapa).
+// Si no se pasa fecha (etapas viejas migradas sin ese dato todavia), cae en
+// "hoy" para no romper el comportamiento previo.
+export function fechaMidnightMs(fechaStr){
+  if(!fechaStr) return todayMidnightMs();
+  const [y, m, d] = fechaStr.split("-").map(Number);
+  const dt = new Date(y, (m || 1) - 1, d || 1);
+  dt.setHours(0,0,0,0);
+  return dt.getTime();
+}
+
+export function instantFromHora(horaStr, offsetStr, fechaStr){
+  return fechaMidnightMs(fechaStr) + hhmmssToMs(horaStr) + (offsetStr ? hhmmssToMs(offsetStr) : 0);
 }
 
 export function nowOficial(state){
@@ -29,13 +48,14 @@ export function nowOficial(state){
 export function buildQueue(day, state){
   const items = state.days[day] || [];
   const horarios = state.dayHorarios[day] || [];
+  const fecha = state.diasMeta[day] && state.diasMeta[day].fecha;
   const chById = {};
   items.forEach(it => { if(it.itemType === "CH") chById[it.id] = it; });
 
   function horarioById(id){ return horarios.find(h => h.id === id) || null; }
   function scheduledForRef(refId, offset){
     const h = horarioById(refId);
-    return h ? instantFromHora(h.hora, offset) : null;
+    return h ? instantFromHora(h.hora, offset, fecha) : null;
   }
   function scheduledForCH(chItem){
     return chItem ? scheduledForRef(chItem.refId, chItem.offset) : null;

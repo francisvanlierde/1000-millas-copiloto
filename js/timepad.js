@@ -75,6 +75,66 @@ export function openTimePad(label, currentValue, confirmCb){
   overlay.classList.add("show");
 }
 
+// Selector de fecha nativo, en la misma hoja que el teclado de hora, para
+// que "+Etapa" pueda encadenar fecha -> largada -> relargada con un look
+// consistente. A diferencia de la hora, acá el picker nativo del sistema
+// no compite con el teclado en pantalla (no hay teclado que tapar).
+let dateOverlay, dateHeader, dateInput, dateDoneBtn, dateCancelBtn;
+let onDateConfirm = null;
+
+function buildDatePad(){
+  if(dateOverlay) return;
+  dateOverlay = document.createElement("div");
+  dateOverlay.className = "tp-overlay";
+
+  const sheet = document.createElement("div");
+  sheet.className = "tp-sheet";
+
+  dateHeader = document.createElement("div");
+  dateHeader.className = "tp-header";
+  dateHeader.textContent = "Fecha";
+
+  dateInput = document.createElement("input");
+  dateInput.type = "date";
+  dateInput.className = "tp-dateinput";
+
+  dateDoneBtn = document.createElement("button");
+  dateDoneBtn.type = "button";
+  dateDoneBtn.className = "tp-done";
+  dateDoneBtn.textContent = "Listo";
+  dateDoneBtn.onclick = () => {
+    const cb = onDateConfirm;
+    const val = dateInput.value;
+    closeDatePad();
+    if(cb && val) cb(val);
+  };
+
+  dateCancelBtn = document.createElement("button");
+  dateCancelBtn.type = "button";
+  dateCancelBtn.className = "tp-cancel";
+  dateCancelBtn.textContent = "Cancelar";
+  dateCancelBtn.onclick = () => closeDatePad();
+
+  sheet.appendChild(dateHeader);
+  sheet.appendChild(dateInput);
+  sheet.appendChild(dateDoneBtn);
+  sheet.appendChild(dateCancelBtn);
+  dateOverlay.appendChild(sheet);
+  document.body.appendChild(dateOverlay);
+}
+
+function closeDatePad(){
+  dateOverlay.classList.remove("show");
+}
+
+export function openDatePad(label, currentValue, confirmCb){
+  buildDatePad();
+  dateHeader.textContent = label;
+  dateInput.value = currentValue || "";
+  onDateConfirm = confirmCb;
+  dateOverlay.classList.add("show");
+}
+
 export function timeField(labelText, value, onChange, disabled){
   const wrap = document.createElement("div");
   wrap.className = "field";

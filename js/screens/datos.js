@@ -1,6 +1,6 @@
 import { store } from "../store.js";
-import { openTimePad, timeField, fmtBuffer } from "../timepad.js";
-import { instantFromHora, nowOficial } from "../engine.js";
+import { openTimePad, openDatePad, timeField, fmtBuffer } from "../timepad.js";
+import { instantFromHora, nowOficial, todayFechaStr } from "../engine.js";
 
 export function initDatos(){
   const state = store.state;
@@ -26,10 +26,10 @@ export function initDatos(){
       const edit = document.createElement("button");
       edit.className = "daytabEdit";
       edit.textContent = "🕓";
-      edit.title = "Editar horario de largada/relargada de " + day;
+      edit.title = "Editar fecha y horario de largada/relargada de " + day;
       edit.onclick = (e) => {
         e.stopPropagation();
-        promptHorariosEtapa(day);
+        promptConfigEtapa(day);
       };
       wrap.appendChild(edit);
       if(Object.keys(state.days).length > 1){
@@ -59,8 +59,9 @@ export function initDatos(){
     addDay.onclick = () => {
       const n = Object.keys(state.days).length + 1;
       const name = "Etapa " + n;
-      promptDosHorarios("080000", "000000", (largada, relargada) => {
+      promptFechaYHorarios(defaultFechaEtapaNueva(), "080000", "000000", (fecha, largada, relargada) => {
         store.ensureDay(name);
+        state.diasMeta[name].fecha = fecha;
         state.dayHorarios[name] = [
           {id: state.nextHorarioId++, nombre: "Largada", hora: largada},
           {id: state.nextHorarioId++, nombre: "Relargada", hora: relargada}
@@ -72,23 +73,41 @@ export function initDatos(){
     dayTabsEl.appendChild(addDay);
   }
 
-  // Pide, en dos pasos consecutivos con el mismo teclado numerico, el
-  // horario de largada y el de relargada. Si el usuario cancela cualquiera
-  // de los dos pasos (✕ del teclado) no se llama a onDone.
-  function promptDosHorarios(defLargada, defRelargada, onDone){
-    openTimePad("Horario de largada", defLargada, (largada) => {
-      openTimePad("Horario de relargada", defRelargada, (relargada) => {
-        onDone(largada, relargada);
+  // La primera etapa que se carga arranca en el dia de hoy; cada etapa
+  // siguiente sugiere el dia posterior a la ultima etapa con fecha cargada,
+  // ya que en la practica las etapas de un rally son dias consecutivos.
+  function defaultFechaEtapaNueva(){
+    const fechas = Object.keys(state.days)
+      .map(d => state.diasMeta[d] && state.diasMeta[d].fecha)
+      .filter(Boolean)
+      .sort();
+    if(fechas.length === 0) return todayFechaStr();
+    const dt = new Date(fechas[fechas.length - 1] + "T00:00:00");
+    dt.setDate(dt.getDate() + 1);
+    return dt.toISOString().slice(0, 10);
+  }
+
+  // Pide, en tres pasos consecutivos (fecha, luego largada, luego relargada),
+  // los datos que definen una etapa. Si el usuario cancela cualquiera de los
+  // tres pasos (✕) no se llama a onDone.
+  function promptFechaYHorarios(defFecha, defLargada, defRelargada, onDone){
+    openDatePad("Fecha de la etapa", defFecha, (fecha) => {
+      openTimePad("Horario de largada", defLargada, (largada) => {
+        openTimePad("Horario de relargada", defRelargada, (relargada) => {
+          onDone(fecha, largada, relargada);
+        });
       });
     });
   }
 
-  function promptHorariosEtapa(day){
+  function promptConfigEtapa(day){
+    store.ensureDay(day);
+    const currentFecha = state.diasMeta[day].fecha || defaultFechaEtapaNueva();
     const list = state.dayHorarios[day] || [];
     const largadaH = list.find(h => h.nombre === "Largada") || list[0] || null;
     const relargadaH = list.find(h => h.nombre === "Relargada") || (list[0] === largadaH ? list[1] : list[0]) || null;
-    promptDosHorarios(largadaH ? largadaH.hora : "080000", relargadaH ? relargadaH.hora : "000000", (largada, relargada) => {
-      store.ensureDay(day);
+    promptFechaYHorarios(currentFecha, largadaH ? largadaH.hora : "080000", relargadaH ? relargadaH.hora : "000000", (fecha, largada, relargada) => {
+      state.diasMeta[day].fecha = fecha;
       const arr = state.dayHorarios[day];
       if(largadaH) largadaH.hora = largada;
       else arr.push({id: state.nextHorarioId++, nombre: "Largada", hora: largada});
@@ -131,20 +150,22 @@ export function initDatos(){
   // Devuelve el instante absoluto (ms) del item, o null si no tiene uno
   // definido (largada libre) — esos quedan donde el usuario los ubique a mano.
   function scheduledInstantFor(item){
+    const meta = state.diasMeta[activeDay()];
+    const fecha = meta && meta.fecha;
     if(item.itemType === "CH" || item.itemType === "CS"){
       const h = horarios().find(x => x.id === item.refId);
-      return h ? instantFromHora(h.hora, item.offset) : null;
+      return h ? instantFromHora(h.hora, item.offset, fecha) : null;
     }
     if(item.itemType === "PCSET"){
       if(item.origen === "ref"){
         const h = horarios().find(x => x.id === item.refId);
-        return h ? instantFromHora(h.hora, item.offset) : null;
+        return h ? instantFromHora(h.hora, item.offset, fecha) : null;
       }
       if(item.origen === "CH"){
         const ch = chItemById(item.chId);
         if(!ch) return null;
         const h = horarios().find(x => x.id === ch.refId);
-        return h ? instantFromHora(h.hora, ch.offset) : null;
+        return h ? instantFromHora(h.hora, ch.offset, fecha) : null;
       }
     }
     return null; // libre

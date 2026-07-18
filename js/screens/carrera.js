@@ -28,6 +28,12 @@ export function initCarrera(){
     return new Date(instant).toLocaleTimeString("es-AR", {hour:"2-digit", minute:"2-digit", second:"2-digit"});
   }
 
+  function fmtFecha(fechaStr){
+    if(!fechaStr) return null;
+    const [y, m, d] = fechaStr.split("-");
+    return d + "/" + m + "/" + y;
+  }
+
   function formatDigits(remainingMs){
     const ms = remainingMs || 0;
     const neg = ms < 0;
@@ -114,7 +120,9 @@ export function initCarrera(){
     const status = getStatus(day, state, now);
     currentStatus = status;
 
-    raceContextEl.textContent = day + " · " + fmtHora(now);
+    const meta = state.diasMeta[day];
+    const fechaLabel = fmtFecha(meta && meta.fecha);
+    raceContextEl.textContent = day + (fechaLabel ? " · " + fechaLabel : "") + " · " + fmtHora(now);
     resetVisual();
 
     if(status.kind === "DONE"){

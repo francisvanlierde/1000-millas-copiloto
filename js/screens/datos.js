@@ -8,8 +8,10 @@ export function initDatos(){
 
   const dayTabsEl = document.getElementById("dayTabs");
   const listEl = document.getElementById("list");
+  const addrowEl = document.querySelector(".addrow");
 
   function activeDay(){ return state.ui.activeDayDatos; }
+  function hayEtapaActiva(){ return !!state.days[activeDay()]; }
   function days(){ return state.days[activeDay()] || []; }
   function horarios(){ return state.dayHorarios[activeDay()] || []; }
 
@@ -32,25 +34,23 @@ export function initDatos(){
         promptConfigEtapa(day);
       };
       wrap.appendChild(edit);
-      if(Object.keys(state.days).length > 1){
-        const del = document.createElement("button");
-        del.className = "daytabDel";
-        del.textContent = "✕";
-        del.title = "Eliminar " + day;
-        del.onclick = (e) => {
-          e.stopPropagation();
-          if(!confirm("¿Eliminar \"" + day + "\" y todo lo cargado en esa etapa? Esta acción no se puede deshacer.")) return;
-          delete state.days[day];
-          delete state.dayHorarios[day];
-          delete state.diasMeta[day];
-          if(activeDay() === day){
-            state.ui.activeDayDatos = Object.keys(state.days)[0];
-          }
-          openRowId = null;
-          renderAll();
-        };
-        wrap.appendChild(del);
-      }
+      const del = document.createElement("button");
+      del.className = "daytabDel";
+      del.textContent = "✕";
+      del.title = "Eliminar " + day;
+      del.onclick = (e) => {
+        e.stopPropagation();
+        if(!confirm("¿Eliminar \"" + day + "\" y todo lo cargado en esa etapa? Esta acción no se puede deshacer.")) return;
+        delete state.days[day];
+        delete state.dayHorarios[day];
+        delete state.diasMeta[day];
+        if(activeDay() === day){
+          state.ui.activeDayDatos = Object.keys(state.days)[0] || null;
+        }
+        openRowId = null;
+        renderAll();
+      };
+      wrap.appendChild(del);
       dayTabsEl.appendChild(wrap);
     });
     const addDay = document.createElement("button");
@@ -251,9 +251,19 @@ export function initDatos(){
   }
 
   function renderList(){
+    listEl.innerHTML = "";
+    addrowEl.style.display = hayEtapaActiva() ? "flex" : "none";
+    if(!hayEtapaActiva()){
+      const empty = document.createElement("div");
+      empty.className = "empty-note";
+      empty.textContent = "Todavía no cargaste ninguna etapa. Tocá \"+ Etapa\" para empezar.";
+      listEl.appendChild(empty);
+      store.notify();
+      return;
+    }
+
     const items = days();
     sortChronologically(items);
-    listEl.innerHTML = "";
     items.forEach((c, idx) => {
       const row = document.createElement("div");
       row.className = "row";

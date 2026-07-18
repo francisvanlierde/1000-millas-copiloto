@@ -46,12 +46,20 @@ export function initScore(){
 
   function renderList(){
     const day = activeDay();
-    const pcs = results(day);
     listEl.innerHTML = "";
 
+    if(!day){
+      const empty = document.createElement("div");
+      empty.className = "empty-note";
+      empty.textContent = "Todavía no cargaste ninguna etapa. Andá a Datos y tocá \"+ Etapa\".";
+      listEl.appendChild(empty);
+      return;
+    }
+
+    const pcs = results(day);
     if(!pcs.length){
       const empty = document.createElement("div");
-      empty.className = "score-empty";
+      empty.className = "empty-note";
       empty.textContent = "Todavía no se corrió ningún PC en esta etapa.";
       listEl.appendChild(empty);
       return;
@@ -220,6 +228,10 @@ export function initScore(){
   }
 
   shareBtn.onclick = async () => {
+    if(!activeDay()){
+      flashStatus("Todavía no cargaste ninguna etapa.");
+      return;
+    }
     const text = buildShareText();
     if(navigator.share){
       try{

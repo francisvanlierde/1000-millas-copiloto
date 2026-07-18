@@ -8,26 +8,12 @@ const LEGACY_KEY = "millas_datos_v1";
 
 function defaultState(){
   return {
-    days: {
-      "Etapa 1": [
-        {id:1, itemType:"CH", nombre:"CH Largada A", refId:100, offset:"000000"},
-        {id:2, itemType:"PCSET", primerNumero:1, cantidad:3, origen:"libre", refId:null, chId:null, tiempos:["000011","000027","000013"]},
-        {id:3, itemType:"CS", nombre:"1 · Parador El Mangrullo", refId:100, offset:"015500"},
-        {id:4, itemType:"CH", nombre:"CH Cruce de Sañico", refId:100, offset:"040800"},
-        {id:5, itemType:"CH", nombre:"Relargada B", refId:101, offset:"000000"}
-      ],
-      "Etapa 2": [
-        {id:6, itemType:"CH", nombre:"CH Largada A", refId:102, offset:"000000"}
-      ]
-    },
-    dayHorarios: {
-      "Etapa 1": [ {id:100, nombre:"Largada A", hora:"080000"}, {id:101, nombre:"Relargada B", hora:"141500"} ],
-      "Etapa 2": [ {id:102, nombre:"Largada A", hora:"080000"} ]
-    },
-    diasMeta: { "Etapa 1": {aplicaDescarte:true}, "Etapa 2": {aplicaDescarte:true} },
-    nextId: 7,
-    nextHorarioId: 200,
-    ui: { activeDayDatos: "Etapa 1", activeDayScore: "Etapa 1", activeDayCarrera: "Etapa 1" },
+    days: {},
+    dayHorarios: {},
+    diasMeta: {},
+    nextId: 1,
+    nextHorarioId: 100,
+    ui: { activeDayDatos: null, activeDayScore: null, activeDayCarrera: null },
     ajustes: {
       numeroAuto: "12",
       anioAuto: "1965",
@@ -116,13 +102,12 @@ export const store = {
   },
 
   resetRaceData(){
-    const fresh = defaultState();
-    this.state.days = { "Etapa 1": [] };
-    this.state.dayHorarios = { "Etapa 1": [] };
-    this.state.diasMeta = { "Etapa 1": {aplicaDescarte:true} };
+    this.state.days = {};
+    this.state.dayHorarios = {};
+    this.state.diasMeta = {};
     this.state.nextId = 1;
     this.state.nextHorarioId = 100;
-    this.state.ui = { activeDayDatos: "Etapa 1", activeDayScore: "Etapa 1", activeDayCarrera: "Etapa 1" };
+    this.state.ui = { activeDayDatos: null, activeDayScore: null, activeDayCarrera: null };
     this.state.carrera = { pcRuntime: {}, pcResults: {} };
     this.notify();
   }

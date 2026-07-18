@@ -184,7 +184,7 @@ html,body{margin:0;padding:0;height:100%;background:#000;font-family:var(--sans)
 .noDescarteNote{margin:10px 16px 0;font-size:11px;color:var(--muted);background:var(--bg-panel);border:1px solid var(--line);padding:8px 10px;border-radius:8px;text-align:center;}
 .score-list{flex:1;overflow-y:auto;padding:10px 16px 6px;display:flex;flex-direction:column;gap:5px;scrollbar-width:none;-ms-overflow-style:none;}
 .score-list::-webkit-scrollbar{display:none;width:0;height:0;}
-.score-empty{margin:16px;padding:20px;text-align:center;color:var(--muted);font-size:13px;background:var(--bg-panel);border:1px solid var(--line);border-radius:12px;}
+.empty-note{margin:16px;padding:20px;text-align:center;color:var(--muted);font-size:13px;background:var(--bg-panel);border:1px solid var(--line);border-radius:12px;}
 .srow{background:var(--bg-panel);border:1px solid var(--line);border-radius:9px;padding:7px 12px;display:flex;align-items:center;gap:10px;}
 .srow.descartada{opacity:.45;}
 .pcnum{font-family:var(--mono);font-weight:800;color:var(--text);font-size:13px;width:52px;flex-shrink:0;}

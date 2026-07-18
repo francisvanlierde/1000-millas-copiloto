@@ -117,6 +117,19 @@ export function initCarrera(){
   function render(){
     const day = activeDay();
     const now = nowOficial(state);
+
+    if(!day){
+      currentStatus = null;
+      raceContextEl.textContent = "Sin etapas cargadas";
+      resetVisual();
+      labelMainEl.textContent = "";
+      digitsEl.textContent = "—";
+      sublabelEl.textContent = "Todavía no cargaste ninguna etapa. Andá a Datos y tocá \"+ Etapa\".";
+      tocarBtn.className = "tocar disabled";
+      clearBeeps();
+      return;
+    }
+
     const status = getStatus(day, state, now);
     currentStatus = status;
 

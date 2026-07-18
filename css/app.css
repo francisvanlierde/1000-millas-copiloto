@@ -45,14 +45,8 @@ html,body{margin:0;padding:0;height:100%;background:#000;font-family:var(--sans)
 .daytabWrap{display:inline-flex;align-items:center;gap:2px;}
 .daytabDel{background:none;border:none;color:var(--muted);font-size:12px;cursor:pointer;padding:2px 4px;}
 .daytabDel:hover{color:var(--red);}
-
-.horariosBox{margin:12px 16px 0;padding:12px 14px;background:var(--bg-panel);border:1px solid var(--line);border-radius:12px;}
-.horariosBox h4{margin:0 0 8px;font-size:12px;color:var(--muted);text-transform:uppercase;letter-spacing:.05em;font-weight:800;}
-.horarioItem{display:flex;align-items:center;gap:8px;margin-bottom:6px;}
-.horarioItem input.nombre{flex:1.2;font-family:var(--sans);background:var(--bg-panel-2);border:1px solid var(--line);color:var(--text);padding:7px 9px;border-radius:7px;font-size:13px;}
-.horarioItem button{background:none;border:none;color:var(--red);cursor:pointer;font-size:15px;padding:0 4px;}
-.addHorario{background:none;border:1px dashed var(--line);color:var(--muted);border-radius:8px;padding:6px 10px;font-size:12px;cursor:pointer;font-weight:700;}
-.addHorario:hover{color:var(--amber);border-color:var(--amber);}
+.daytabEdit{background:none;border:none;color:var(--muted);font-size:12px;cursor:pointer;padding:2px 4px;}
+.daytabEdit:hover{color:var(--amber);}
 
 .timepill{
   flex:1; background:var(--bg-panel-2); border:1px solid var(--line); color:var(--amber);

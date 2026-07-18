@@ -46,8 +46,12 @@ function build(){
   doneBtn.className = "tp-done";
   doneBtn.textContent = "Listo";
   doneBtn.onclick = () => {
-    if(onConfirm) onConfirm(buffer);
+    // Cierra antes de avisar: si el callback abre otro openTimePad
+    // encadenado (p.ej. largada -> relargada), este close() no debe
+    // pisar el "show" del modal recien reabierto.
+    const cb = onConfirm;
     close();
+    if(cb) cb(buffer);
   };
 
   sheet.appendChild(header);

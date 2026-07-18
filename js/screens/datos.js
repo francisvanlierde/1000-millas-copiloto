@@ -8,7 +8,6 @@ export function initDatos(){
 
   const dayTabsEl = document.getElementById("dayTabs");
   const listEl = document.getElementById("list");
-  const horariosListEl = document.getElementById("horariosList");
 
   function activeDay(){ return state.ui.activeDayDatos; }
   function days(){ return state.days[activeDay()] || []; }
@@ -24,6 +23,15 @@ export function initDatos(){
       b.textContent = day;
       b.onclick = () => { state.ui.activeDayDatos = day; openRowId = null; renderAll(); };
       wrap.appendChild(b);
+      const edit = document.createElement("button");
+      edit.className = "daytabEdit";
+      edit.textContent = "🕓";
+      edit.title = "Editar horario de largada/relargada de " + day;
+      edit.onclick = (e) => {
+        e.stopPropagation();
+        promptHorariosEtapa(day);
+      };
+      wrap.appendChild(edit);
       if(Object.keys(state.days).length > 1){
         const del = document.createElement("button");
         del.className = "daytabDel";
@@ -51,41 +59,43 @@ export function initDatos(){
     addDay.onclick = () => {
       const n = Object.keys(state.days).length + 1;
       const name = "Etapa " + n;
-      store.ensureDay(name);
-      state.ui.activeDayDatos = name;
-      renderAll();
+      promptDosHorarios("080000", "000000", (largada, relargada) => {
+        store.ensureDay(name);
+        state.dayHorarios[name] = [
+          {id: state.nextHorarioId++, nombre: "Largada", hora: largada},
+          {id: state.nextHorarioId++, nombre: "Relargada", hora: relargada}
+        ];
+        state.ui.activeDayDatos = name;
+        renderAll();
+      });
     };
     dayTabsEl.appendChild(addDay);
   }
 
-  function renderHorarios(){
-    horariosListEl.innerHTML = "";
-    horarios().forEach(h => {
-      const row = document.createElement("div");
-      row.className = "horarioItem";
-      const nombreInp = document.createElement("input");
-      nombreInp.className = "nombre"; nombreInp.type = "text"; nombreInp.value = h.nombre;
-      nombreInp.oninput = () => { h.nombre = nombreInp.value; store.save(); };
-      nombreInp.onblur = () => renderList();
-
-      const pill = document.createElement("div");
-      pill.className = "timepill";
-      pill.style.flex = "1";
-      pill.textContent = fmtBuffer(h.hora);
-      pill.onclick = () => {
-        openTimePad(h.nombre, h.hora, (newVal) => { h.hora = newVal; pill.textContent = fmtBuffer(newVal); renderList(); });
-      };
-
-      const del = document.createElement("button");
-      del.textContent = "✕";
-      del.onclick = () => {
-        state.dayHorarios[activeDay()] = horarios().filter(x => x.id !== h.id);
-        renderHorarios(); renderList();
-      };
-      row.appendChild(nombreInp); row.appendChild(pill); row.appendChild(del);
-      horariosListEl.appendChild(row);
+  // Pide, en dos pasos consecutivos con el mismo teclado numerico, el
+  // horario de largada y el de relargada. Si el usuario cancela cualquiera
+  // de los dos pasos (✕ del teclado) no se llama a onDone.
+  function promptDosHorarios(defLargada, defRelargada, onDone){
+    openTimePad("Horario de largada", defLargada, (largada) => {
+      openTimePad("Horario de relargada", defRelargada, (relargada) => {
+        onDone(largada, relargada);
+      });
     });
-    store.notify();
+  }
+
+  function promptHorariosEtapa(day){
+    const list = state.dayHorarios[day] || [];
+    const largadaH = list.find(h => h.nombre === "Largada") || list[0] || null;
+    const relargadaH = list.find(h => h.nombre === "Relargada") || (list[0] === largadaH ? list[1] : list[0]) || null;
+    promptDosHorarios(largadaH ? largadaH.hora : "080000", relargadaH ? relargadaH.hora : "000000", (largada, relargada) => {
+      store.ensureDay(day);
+      const arr = state.dayHorarios[day];
+      if(largadaH) largadaH.hora = largada;
+      else arr.push({id: state.nextHorarioId++, nombre: "Largada", hora: largada});
+      if(relargadaH) relargadaH.hora = relargada;
+      else arr.push({id: state.nextHorarioId++, nombre: "Relargada", hora: relargada});
+      renderAll();
+    });
   }
 
   function horarioNombre(refId){
@@ -447,12 +457,6 @@ export function initDatos(){
     if(!structureLocked) form.appendChild(deleteBtn(items, idx));
   }
 
-  document.getElementById("addHorarioBtn").onclick = () => {
-    store.ensureDay(activeDay());
-    state.dayHorarios[activeDay()].push({id: state.nextHorarioId++, nombre: "Nuevo horario", hora: "000000"});
-    renderHorarios();
-  };
-
   document.getElementById("addCH").onclick = () => {
     const items = days();
     const firstRef = horarios()[0];
@@ -471,7 +475,7 @@ export function initDatos(){
     items.push(n); openRowId = n.id; renderList();
   };
 
-  function renderAll(){ renderTabs(); renderHorarios(); renderList(); store.notify(); }
+  function renderAll(){ renderTabs(); renderList(); store.notify(); }
 
   let tickId = null;
   return {

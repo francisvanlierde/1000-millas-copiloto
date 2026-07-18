@@ -71,20 +71,22 @@ export function openTimePad(label, currentValue, confirmCb){
   overlay.classList.add("show");
 }
 
-export function timeField(labelText, value, onChange){
+export function timeField(labelText, value, onChange, disabled){
   const wrap = document.createElement("div");
   wrap.className = "field";
   const l = document.createElement("label");
   l.textContent = labelText;
   const pill = document.createElement("div");
-  pill.className = "timepill";
+  pill.className = "timepill" + (disabled ? " locked" : "");
   pill.textContent = fmtBuffer(value);
-  pill.onclick = () => {
-    openTimePad(labelText, value, (newVal) => {
-      onChange(newVal);
-      pill.textContent = fmtBuffer(newVal);
-    });
-  };
+  if(!disabled){
+    pill.onclick = () => {
+      openTimePad(labelText, value, (newVal) => {
+        onChange(newVal);
+        pill.textContent = fmtBuffer(newVal);
+      });
+    };
+  }
   wrap.appendChild(l);
   wrap.appendChild(pill);
   return wrap;

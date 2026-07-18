@@ -17,7 +17,7 @@ export function todayMidnightMs(){
   return d.getTime();
 }
 
-function instantFromHora(horaStr, offsetStr){
+export function instantFromHora(horaStr, offsetStr){
   return todayMidnightMs() + hhmmssToMs(horaStr) + (offsetStr ? hhmmssToMs(offsetStr) : 0);
 }
 

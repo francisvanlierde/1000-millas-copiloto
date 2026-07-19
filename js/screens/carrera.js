@@ -48,7 +48,16 @@ export function initCarrera(){
     return (neg ? "-" : "") + core;
   }
 
+  // El AudioContext arranca "suspended" en la mayoria de los navegadores si
+  // no se crea/reanuda dentro de un gesto real del usuario (autoplay policy).
+  // Como los beeps se disparan desde setTimeout (sin gesto), si no lo
+  // destrabamos aca, quedan mudos hasta que algo mas lo reanude por
+  // casualidad — eso es lo que se percibia como "la chicharra empieza tarde".
   let audioCtx = null;
+  function unlockAudio(){
+    if(!audioCtx) audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+    if(audioCtx.state === "suspended") audioCtx.resume().catch(()=>{});
+  }
   function beep(freq){
     try{
       if(!audioCtx) audioCtx = new (window.AudioContext || window.webkitAudioContext)();
@@ -109,9 +118,26 @@ export function initCarrera(){
     horaAbsEl.classList.remove("show");
     bannerEl.className = "banner";
     digitsEl.className = "digits";
+    digitsEl.style.fontSize = "";
     tocarBtn.className = "tocar";
     tocarBtn.textContent = "Tocar";
     sublabelEl.textContent = "";
+  }
+
+  // Un clamp() de CSS no puede adaptarse al largo variable del texto
+  // ("0:45" vs "59:59"), así que para el PC en marcha medimos y calculamos
+  // el font-size que realmente llena el ancho disponible sin desbordar.
+  function fitDigitsToStage(){
+    const stageEl = digitsEl.closest(".stage");
+    if(!stageEl) return;
+    const maxWidth = stageEl.clientWidth - 40;
+    const maxHeight = stageEl.clientHeight * 0.55;
+    digitsEl.style.fontSize = "100px";
+    const naturalWidth = digitsEl.scrollWidth || 1;
+    let size = Math.floor((maxWidth / naturalWidth) * 100);
+    size = Math.min(size, Math.floor(maxHeight));
+    size = Math.max(90, Math.min(size, 320));
+    digitsEl.style.fontSize = size + "px";
   }
 
   function render(){
@@ -189,9 +215,8 @@ export function initCarrera(){
     // PC en curso (ya arrancado)
     const umbralMs = Math.max(1, state.ajustes.umbralChicharraSeg || 10) * 1000;
     digitsEl.textContent = formatDigits(status.remainingMs);
-    if(status.remainingMs <= umbralMs){
-      digitsEl.className = "digits critical" + (status.remainingMs < 0 ? " neg" : "");
-    }
+    digitsEl.className = "digits running" + (status.remainingMs <= umbralMs ? " critical" : "") + (status.remainingMs < 0 ? " neg" : "");
+    fitDigitsToStage();
     if(status.overdue){
       sublabelEl.textContent = "Tiempo excedido — tocá para finalizar";
       bannerEl.textContent = "Debe tocar";
@@ -201,6 +226,7 @@ export function initCarrera(){
   }
 
   tocarBtn.onclick = () => {
+    unlockAudio();
     if(!currentStatus || currentStatus.kind !== "PC") return;
     const day = activeDay();
     const now = nowOficial(state);
@@ -230,6 +256,10 @@ export function initCarrera(){
   document.addEventListener("visibilitychange", () => {
     if(document.visibilityState === "visible" && intervalId) render();
   });
+
+  // Destraba el audio en el primer toque a la app, sea donde sea (no solo
+  // en "Tocar"), para que ya este listo apenas arranque el primer PC.
+  document.addEventListener("pointerdown", unlockAudio, {once:true});
 
   return {
     show(){

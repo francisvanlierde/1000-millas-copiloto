@@ -6,8 +6,16 @@ export function fmtBuffer(buf){
   return b.slice(0,2) + ":" + b.slice(2,4) + ":" + b.slice(4,6);
 }
 
+// Formato corto para duraciones de PC (mm:ss) — puertas hacia adentro
+// siguen guardandose como "00mmss" (6 digitos) para no tocar el motor.
+export function fmtDuracion(buf){
+  const b = (buf || "000000").replace(/:/g, "").padStart(6, "0").slice(-4);
+  return b.slice(0,2) + ":" + b.slice(2,4);
+}
+
 let overlay, header, display, grid, doneBtn;
 let buffer = "000000";
+let bufferLen = 6;
 let onConfirm = null;
 
 function build(){
@@ -33,10 +41,10 @@ function build(){
     b.type = "button";
     b.textContent = k;
     b.onclick = () => {
-      if(k === "⌫"){ buffer = ("0" + buffer).slice(0, 6); }
+      if(k === "⌫"){ buffer = ("0" + buffer).slice(0, bufferLen); }
       else if(k === "✕"){ close(); return; }
-      else { buffer = (buffer + k).slice(-6); }
-      display.textContent = fmtBuffer(buffer);
+      else { buffer = (buffer + k).slice(-bufferLen); }
+      display.textContent = bufferLen === 4 ? fmtDuracion(buffer) : fmtBuffer(buffer);
     };
     grid.appendChild(b);
   });
@@ -50,8 +58,11 @@ function build(){
     // encadenado (p.ej. largada -> relargada), este close() no debe
     // pisar el "show" del modal recien reabierto.
     const cb = onConfirm;
+    // En modo mm:ss el buffer trae solo 4 digitos — se completa a 6
+    // (horas en "00") para que el resto de la app siga viendo "hhmmss".
+    const val = bufferLen === 4 ? ("00" + buffer).slice(-6) : buffer;
     close();
-    if(cb) cb(buffer);
+    if(cb) cb(val);
   };
 
   sheet.appendChild(header);
@@ -66,11 +77,13 @@ function close(){
   overlay.classList.remove("show");
 }
 
-export function openTimePad(label, currentValue, confirmCb){
+export function openTimePad(label, currentValue, confirmCb, opts){
   build();
   header.textContent = label;
-  buffer = (currentValue || "000000").replace(/:/g, "").padStart(6, "0").slice(-6);
-  display.textContent = fmtBuffer(buffer);
+  bufferLen = (opts && opts.duracion) ? 4 : 6;
+  const raw = (currentValue || "000000").replace(/:/g, "").padStart(6, "0");
+  buffer = raw.slice(-bufferLen);
+  display.textContent = bufferLen === 4 ? fmtDuracion(buffer) : fmtBuffer(buffer);
   onConfirm = confirmCb;
   overlay.classList.add("show");
 }

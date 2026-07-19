@@ -1,4 +1,4 @@
-const CACHE = "millas-v7";
+const CACHE = "millas-v9";
 const FILES = [
   "./index.html",
   "./manifest.json",

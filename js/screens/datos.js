@@ -1,5 +1,5 @@
 import { store } from "../store.js";
-import { openTimePad, openDatePad, timeField, fmtBuffer } from "../timepad.js";
+import { openTimePad, openDatePad, timeField, fmtBuffer, fmtDuracion } from "../timepad.js";
 import { instantFromHora, nowOficial, todayFechaStr } from "../engine.js";
 
 export function initDatos(){
@@ -471,14 +471,14 @@ export function initDatos(){
       lbl.textContent = "PC " + (c.primerNumero + i) + (pcDone ? " ✓" : "");
       const pill = document.createElement("div");
       pill.className = "timepill" + (pcDone ? " locked" : "");
-      pill.textContent = fmtBuffer(c.tiempos[i] || "000000");
+      pill.textContent = fmtDuracion(c.tiempos[i] || "000000");
       if(!pcDone){
         pill.onclick = ((index) => () => {
           openTimePad("PC " + (c.primerNumero + index), c.tiempos[index], (newVal) => {
             c.tiempos[index] = newVal;
-            pill.textContent = fmtBuffer(newVal);
+            pill.textContent = fmtDuracion(newVal);
             store.notify();
-          });
+          }, {duracion: true});
         })(i);
       }
       wrap.appendChild(lbl); wrap.appendChild(pill);
@@ -500,9 +500,19 @@ export function initDatos(){
     const n = {id: state.nextId++, itemType: "CS", nombre: "Nuevo CS", refId: firstRef ? firstRef.id : null, offset: "000000"};
     items.push(n); openRowId = n.id; renderList();
   };
+  function ultimoPcNumero(){
+    let max = 0;
+    days().forEach(it => {
+      if(it.itemType === "PCSET"){
+        const last = it.primerNumero + it.cantidad - 1;
+        if(last > max) max = last;
+      }
+    });
+    return max;
+  }
   document.getElementById("addPCSET").onclick = () => {
     const items = days();
-    const n = {id: state.nextId++, itemType: "PCSET", primerNumero: 1, cantidad: 1, origen: "libre", refId: null, chId: null, tiempos: ["000130"]};
+    const n = {id: state.nextId++, itemType: "PCSET", primerNumero: ultimoPcNumero() + 1, cantidad: 1, origen: "libre", refId: null, chId: null, tiempos: ["000130"]};
     items.push(n); openRowId = n.id; renderList();
   };
 

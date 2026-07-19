@@ -148,6 +148,13 @@ html,body{margin:0;padding:0;height:100%;background:#000;font-family:var(--sans)
 }
 .digits.neg{color:var(--red); text-shadow:0 0 18px var(--red-glow);}
 .digits.critical{font-size:clamp(96px,26vw,168px); color:var(--red); text-shadow:0 0 30px var(--red-glow);}
+/* PC en marcha: el tamaño lo calcula JS (fitDigitsToStage en carrera.js) para
+   ocupar el máximo posible sin desbordar, ya que un clamp() fijo no puede
+   adaptarse al largo variable del texto ("0:45" vs "59:59"). No se define
+   font-size acá a propósito: un clamp() con vw/vh en este selector hace que
+   Chrome calcule mal el ancho intrínseco del flex item (se estira al 100%
+   del contenedor en vez de ajustarse al contenido) mientras JS todavía no
+   puso el font-size inline definitivo. */
 .hora-abs{font-family:var(--mono); font-weight:700; font-size:20px; color:var(--text); letter-spacing:.02em; display:none;}
 .hora-abs.show{display:block;}
 

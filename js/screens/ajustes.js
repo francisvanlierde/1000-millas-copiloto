@@ -157,6 +157,11 @@ export function initAjustes(){
     captureTimeoutId = setTimeout(() => {
       cancelCapture();
       render();
+      // La causa mas comun de "no detecta nada": el dispositivo manda
+      // Volumen +/-, y el sistema operativo se queda con esa tecla antes
+      // de que llegue al navegador (no hay forma de destrabar esto desde
+      // la pagina web, es una restriccion del SO/navegador).
+      alert("No se detectó ninguna tecla en 10 segundos.\n\nSi al presionar el pulsador cambia el volumen del teléfono, la app no puede recibir esa señal — los botones de volumen quedan reservados por el sistema operativo, ninguna página web puede leerlos.\n\nRevisá si el dispositivo tiene un modo alternativo (a veces hay un interruptor \"cámara/presentación\"), o probá con uno que mande una flecha, Enter, o Re Pág/Av Pág.");
     }, 10000);
   }
 

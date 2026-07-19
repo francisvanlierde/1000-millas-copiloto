@@ -23,8 +23,12 @@ function defaultState(){
       dualPulsadores: false,
       toleranciaMs: 300,
       umbralChicharraSeg: 10,
-      pulsadorCopilotoConectado: true,
-      pulsadorPilotoConectado: false
+      // Código de la tecla (KeyboardEvent.code) que manda cada pulsador
+      // Bluetooth, emparejado a nivel sistema operativo (como un teclado
+      // externo) — no vía Web Bluetooth, que no existe en iOS y excluye
+      // el perfil HID que usan la mayoría de estos dispositivos.
+      pulsadorCopilotoKey: null,
+      pulsadorPilotoKey: null
     },
     carrera: {
       pcRuntime: {},   // { [pcKey]: { startInstant: epochMs } }

@@ -261,4 +261,5 @@ html,body{margin:0;padding:0;height:100%;background:#000;font-family:var(--sans)
   border-radius:8px; font-size:12px; font-weight:700; cursor:pointer;
 }
 .pairbtn.connected{color:var(--green); border-color:rgba(53,208,127,.4);}
+.pairbtn.capturing{color:var(--amber); border-color:rgba(255,138,30,.4); animation:pulse 1.1s ease-in-out infinite;}
 .disabled{opacity:.4; pointer-events:none;}

@@ -19,6 +19,16 @@ export function initCarrera(){
   let beepTimeouts = [];
   let beepScheduledForKey = null;
 
+  // Mensaje corto que se superpone al sublabel normal por unos segundos
+  // (ej. avisos de los pulsadores) sin que el próximo tick de render() lo
+  // pise de inmediato.
+  let flashMsg = null;
+  let flashUntil = 0;
+  function flashSublabel(msg, ms){
+    flashMsg = msg;
+    flashUntil = Date.now() + (ms || 3000);
+  }
+
   function activeDay(){
     if(!state.days[state.ui.activeDayCarrera]) state.ui.activeDayCarrera = Object.keys(state.days)[0];
     return state.ui.activeDayCarrera;
@@ -141,6 +151,11 @@ export function initCarrera(){
   }
 
   function render(){
+    renderInner();
+    if(flashMsg && Date.now() < flashUntil) sublabelEl.textContent = flashMsg;
+  }
+
+  function renderInner(){
     const day = activeDay();
     const now = nowOficial(state);
 
@@ -225,11 +240,12 @@ export function initCarrera(){
     scheduleBeepsForPC(status);
   }
 
-  tocarBtn.onclick = () => {
+  // Accion compartida por el boton en pantalla y por los pulsadores fisicos:
+  // dado un instante ya resuelto, largar o finalizar el PC actual.
+  function doTocar(now){
     unlockAudio();
     if(!currentStatus || currentStatus.kind !== "PC") return;
     const day = activeDay();
-    const now = nowOficial(state);
     if(currentStatus.needsLargar || currentStatus.needsConfirmPass){
       iniciarPC(state, currentStatus.key, now);
       clearBeeps();
@@ -240,7 +256,65 @@ export function initCarrera(){
       store.notify();
     }
     render();
-  };
+  }
+
+  tocarBtn.onclick = () => doTocar(nowOficial(state));
+
+  // --- Pulsadores fisicos (Bluetooth emparejados como teclado del SO) ---
+  // Cada uno manda su propia tecla (configurada en Ajustes). Con "Modo dual"
+  // apagado cualquiera de los dos dispara el toque de inmediato (redundante).
+  // Con "Modo dual" prendido se espera a que ambos toquen el mismo evento y
+  // se promedian los instantes, descartando el mas alejado si la diferencia
+  // supera la tolerancia configurada.
+  let pendingPulsador = null; // {role, key, instant}
+  let pendingTimeoutId = null;
+
+  function clearPendingPulsador(){
+    if(pendingTimeoutId){ clearTimeout(pendingTimeoutId); pendingTimeoutId = null; }
+    pendingPulsador = null;
+  }
+
+  function rolePorTecla(code){
+    if(code && code === state.ajustes.pulsadorCopilotoKey) return "copiloto";
+    if(code && code === state.ajustes.pulsadorPilotoKey) return "piloto";
+    return null;
+  }
+
+  function onPulsadorKey(e){
+    const role = rolePorTecla(e.code);
+    if(!role) return;
+    e.preventDefault();
+    if(!currentStatus || currentStatus.kind !== "PC") return;
+    const pcKey = currentStatus.key;
+    const now = nowOficial(state);
+
+    if(!state.ajustes.dualPulsadores){
+      doTocar(now);
+      return;
+    }
+
+    if(pendingPulsador && pendingPulsador.key === pcKey && pendingPulsador.role !== role){
+      const diff = Math.abs(now - pendingPulsador.instant);
+      const tolerancia = Math.max(0, state.ajustes.toleranciaMs || 0);
+      const finalNow = diff <= tolerancia ? Math.round((now + pendingPulsador.instant) / 2) : pendingPulsador.instant;
+      clearPendingPulsador();
+      doTocar(finalNow);
+      if(diff > tolerancia) flashSublabel("Discrepancia entre pulsadores (" + Math.round(diff) + "ms) — se usó el primer toque");
+      return;
+    }
+
+    clearPendingPulsador();
+    pendingPulsador = { role, key: pcKey, instant: now };
+    const esperaMs = Math.max(1500, (state.ajustes.toleranciaMs || 0) * 3);
+    pendingTimeoutId = setTimeout(() => {
+      if(pendingPulsador && pendingPulsador.key === pcKey){
+        const solo = pendingPulsador;
+        clearPendingPulsador();
+        doTocar(solo.instant);
+        flashSublabel("Solo se registró el pulsador de " + solo.role);
+      }
+    }, esperaMs);
+  }
 
   undoBtn.onclick = () => {
     const changed = deshacerUltimoToque(state, activeDay());
@@ -264,12 +338,15 @@ export function initCarrera(){
   return {
     show(){
       renderDayTabs();
+      document.addEventListener("keydown", onPulsadorKey);
       if(!intervalId){
         render();
         intervalId = setInterval(render, 200);
       }
     },
     hide(){
+      document.removeEventListener("keydown", onPulsadorKey);
+      clearPendingPulsador();
       if(intervalId){ clearInterval(intervalId); intervalId = null; }
       clearBeeps();
     }

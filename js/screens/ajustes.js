@@ -19,6 +19,20 @@ function esMismoDia(a, b){
   return da.getFullYear() === db.getFullYear() && da.getMonth() === db.getMonth() && da.getDate() === db.getDate();
 }
 
+// Nombres legibles para los codigos de tecla mas comunes que mandan los
+// pulsadores Bluetooth tipo "control remoto" (se emparejan como teclado a
+// nivel sistema operativo, asi que a la app le llegan como keydown normales).
+const KEY_LABELS = {
+  Space: "Espacio", Enter: "Enter", Escape: "Escape", Tab: "Tab",
+  ArrowLeft: "Flecha izquierda", ArrowRight: "Flecha derecha",
+  ArrowUp: "Flecha arriba", ArrowDown: "Flecha abajo",
+  PageUp: "Av Pág", PageDown: "Re Pág",
+  AudioVolumeUp: "Volumen +", AudioVolumeDown: "Volumen -"
+};
+function keyLabel(code){
+  return KEY_LABELS[code] || code;
+}
+
 export function initAjustes(){
   const state = store.state;
 
@@ -32,10 +46,20 @@ export function initAjustes(){
   const tolItem = document.getElementById("tolItem");
   const tolInput = document.getElementById("tolInput");
   const pairCopiloto = document.getElementById("pairCopiloto");
-  const pairPilotoItem = document.getElementById("pairPilotoItem");
   const pairPiloto = document.getElementById("pairPiloto");
   const umbralInput = document.getElementById("umbralInput");
   const wipeBtn = document.getElementById("wipeBtn");
+
+  // Mientras se espera el toque del pulsador para emparejarlo, el boton
+  // muestra "Presioná el botón…" — render() no debe pisar ese texto.
+  let capturing = null; // "copiloto" | "piloto" | null
+  let captureTimeoutId = null;
+
+  function renderPairBtn(btn, key, role){
+    if(capturing === role) return;
+    btn.className = "pairbtn" + (key ? " connected" : "");
+    btn.textContent = key ? "Conectado (" + keyLabel(key) + ")" : "Emparejar";
+  }
 
   function render(){
     const a = state.ajustes;
@@ -57,14 +81,10 @@ export function initAjustes(){
 
     dualSwitch.className = "switch" + (a.dualPulsadores ? " on" : "");
     tolItem.className = "item" + (a.dualPulsadores ? "" : " disabled");
-    pairPilotoItem.className = "item" + (a.dualPulsadores ? "" : " disabled");
     tolInput.value = a.toleranciaMs;
 
-    pairCopiloto.className = "pairbtn" + (a.pulsadorCopilotoConectado ? " connected" : "");
-    pairCopiloto.textContent = a.pulsadorCopilotoConectado ? "Conectado" : "Sin señal";
-
-    pairPiloto.className = "pairbtn" + (a.pulsadorPilotoConectado ? " connected" : "");
-    pairPiloto.textContent = a.pulsadorPilotoConectado ? "Conectado" : "Emparejar";
+    renderPairBtn(pairCopiloto, a.pulsadorCopilotoKey, "copiloto");
+    renderPairBtn(pairPiloto, a.pulsadorPilotoKey, "piloto");
 
     umbralInput.value = a.umbralChicharraSeg;
   }
@@ -101,11 +121,47 @@ export function initAjustes(){
     store.notify();
   };
 
-  pairPiloto.onclick = () => {
-    state.ajustes.pulsadorPilotoConectado = !state.ajustes.pulsadorPilotoConectado;
+  // Emparejar un pulsador es simplemente "esperar el proximo keydown" — el
+  // dispositivo Bluetooth ya se emparejo antes a nivel sistema operativo
+  // (como un teclado externo), asi que a la app solo le llega un evento de
+  // tecla normal cuando el copiloto/piloto lo aprieta.
+  function cancelCapture(){
+    if(captureTimeoutId){ clearTimeout(captureTimeoutId); captureTimeoutId = null; }
+    document.removeEventListener("keydown", onCaptureKey, true);
+    capturing = null;
+  }
+
+  function onCaptureKey(e){
+    e.preventDefault();
+    const role = capturing;
+    if(!role) return;
+    const otherKey = role === "copiloto" ? state.ajustes.pulsadorPilotoKey : state.ajustes.pulsadorCopilotoKey;
+    cancelCapture();
+    if(otherKey && otherKey === e.code){
+      render();
+      alert("Ese botón manda la misma tecla (" + keyLabel(e.code) + ") que el otro pulsador ya emparejado. Para poder diferenciarlos necesitás un dispositivo que mande una tecla distinta.");
+      return;
+    }
+    if(role === "copiloto") state.ajustes.pulsadorCopilotoKey = e.code;
+    else state.ajustes.pulsadorPilotoKey = e.code;
     store.notify();
     render();
-  };
+  }
+
+  function startCapture(role, btn){
+    cancelCapture();
+    capturing = role;
+    btn.className = "pairbtn capturing";
+    btn.textContent = "Presioná el botón del pulsador…";
+    document.addEventListener("keydown", onCaptureKey, true);
+    captureTimeoutId = setTimeout(() => {
+      cancelCapture();
+      render();
+    }, 10000);
+  }
+
+  pairCopiloto.onclick = () => startCapture("copiloto", pairCopiloto);
+  pairPiloto.onclick = () => startCapture("piloto", pairPiloto);
 
   umbralInput.oninput = () => {
     const n = parseInt(umbralInput.value, 10);
@@ -122,6 +178,6 @@ export function initAjustes(){
 
   return {
     show(){ render(); },
-    hide(){}
+    hide(){ cancelCapture(); }
   };
 }
